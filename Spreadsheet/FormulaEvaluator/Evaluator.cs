@@ -10,9 +10,19 @@ using System.Threading.Tasks;
 
 namespace FormulaEvaluator
 {
+    /// <summary>
+    /// This class contains methods to evaluate basic math functions
+    /// </summary>
     public static class Evaluator
     {
         public delegate int Lookup(String v);
+
+        /// <summary>
+        /// This method takes a expression in the form a string and evaluates the result
+        /// </summary>
+        /// <param name="exp">The expression to evaluate</param>
+        /// <param name="variableEvaluator">The lookup for variables</param>
+        /// <returns>the Integer solution of the expression</returns>
         public static int Evaluate(string exp, Lookup variableEvaluator)
         {
             Stack<String> ops = new Stack<String>();
@@ -63,10 +73,10 @@ namespace FormulaEvaluator
 
                 //handle integers
                 if (isInteger) {
-                    if (ops.Peek().Equals("*") || ops.Peek().Equals("/"))
+                    if (ops.Count > 0 && (ops.Peek().Equals("*") || ops.Peek().Equals("/")))
                     {
                         // * or / is on top of stack
-                        //TODO check for divide by zero and ensure value stack is not empty
+                        if (values.Count == 0) throw new ArgumentException("missing values");
                         var result = values.Pop();
                         var op = ops.Pop();
                         //apply operator
@@ -76,6 +86,7 @@ namespace FormulaEvaluator
                                 result = result * n;
                                 break;
                             case "/":
+                                if (n == 0) throw new ArgumentException("Can't divide by zero");
                                 result = result / n;
                                 break;
                         }
@@ -91,68 +102,83 @@ namespace FormulaEvaluator
                 }
 
                 //handle operators
-                switch (c)
+                if (ops.Count > 0)
                 {
-                    case 43 or 45:
-                        //+- case
-                        //TODO handle if the value stack has < 2 values
-                        {
+                    switch (c)
+                    {
+                        case 43 or 45:
+                            //+- case
+                            {
+                                switch (ops.Peek())
+                                {
+                                    case "+":
+                                        if (values.Count < 2) throw new ArgumentException("Invalid input");
+                                        ops.Pop();
+                                        values.Push(values.Pop() + values.Pop());
+                                        break;
+
+                                    case "-":
+                                        if (values.Count < 2) throw new ArgumentException("Invalid input");
+                                        ops.Pop();
+                                        values.Push(values.Pop() - values.Pop());
+                                        break;
+                                }
+                                ops.Push(subs[i]);
+                                continue;
+                            }
+
+                        case 42 or 47:
+                            //*/ case
+                            ops.Push(subs[i]);
+                            continue;
+                        case 40:
+                            //( case
+                            ops.Push(subs[i]);
+                            continue;
+                        case 41:
+                            //) case
                             switch (ops.Peek())
                             {
                                 case "+":
+                                    if (values.Count < 2) throw new ArgumentException("Invalid input");
                                     ops.Pop();
                                     values.Push(values.Pop() + values.Pop());
                                     break;
 
                                 case "-":
+                                    if (values.Count < 2) throw new ArgumentException("Invalid input");
                                     ops.Pop();
                                     values.Push(values.Pop() - values.Pop());
                                     break;
+
+                                case "*":
+                                    ops.Pop();
+                                    values.Push(values.Pop() * values.Pop());
+                                    break;
+
+                                case "/":
+                                    var v1 = values.Pop();
+                                    var v2 = values.Pop();
+                                    if (v2 == 0) throw new ArgumentException("Can't divide by zero");
+                                    ops.Pop();
+                                    values.Push(v1 / v2);
+                                    break;
                             }
-                            ops.Push(subs[i]);
+                            if(ops.Count == 0) throw new ArgumentException("Missing Parenthesis");
+                            if (ops.Peek().ElementAt(0) != '(') throw new ArgumentException("Missing Parenthesis");
+                            ops.Pop();
                             continue;
-                        }
-                        
-                    case 42 or 47:
-                        //*/ case
-                        ops.Push(subs[i]);
-                        continue;
-                    case 40:
-                        //( case
-                        ops.Push(subs[i]);
-                        continue;
-                    case 41:
-                        //) case
-                        //TODO handle if the value stack has < 2 values, handle a '(' not being found where it should be, and check for divide by 0
-                        switch (ops.Peek())
-                        {
-                            case "+":
-                                ops.Pop();
-                                values.Push(values.Pop() + values.Pop());
-                                break;
-
-                            case "-":
-                                ops.Pop();
-                                values.Push(values.Pop() - values.Pop());
-                                break;
-
-                            case "*":
-                                ops.Pop();
-                                values.Push(values.Pop() * values.Pop());
-                                break;
-
-                            case "/":
-                                ops.Pop();
-                                values.Push(values.Pop() / values.Pop());
-                                break;
-                        }
-                        ops.Pop();
-                        continue;
-                    default:
-                        continue;
+                        default:
+                            continue;
+                    }
+                }
+                else
+                {
+                    ops.Push(subs[i]);
                 }
 
             }
+            //determine what to return and return
             if(ops.Count == 0)
             {
                 return values.Pop();
