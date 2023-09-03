@@ -21,8 +21,12 @@ namespace FormulaEvaluator
             string[] subs = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
             int length = subs.Length;
 
+            //trim whitespace
+            for (int i = 0; i < length; i++) subs[i] = subs[i].Trim();
+
             for (int i = 0; i < length; i++)
             {
+                if (subs[i].Length == 0) { continue; }
                 int c = subs[i].ElementAt(0);
                 int n = 0;
                 bool isInteger = false;
@@ -30,10 +34,6 @@ namespace FormulaEvaluator
                 //check for integers or whitespace
                 switch (c)
                 {
-                    case 32:
-                        //whitespace case - skip
-                        continue;
-
                     case > 47 and < 58:
                         //integer case - translate substring to int
                         n = int.Parse(subs[i]);
