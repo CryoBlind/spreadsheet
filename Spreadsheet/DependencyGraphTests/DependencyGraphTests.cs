@@ -259,4 +259,112 @@ public class DependencyGraphTest
         }
     }
 
+    [TestMethod()]
+    public void simpleCountTest()
+    {
+        DependencyGraph t = new DependencyGraph();
+        Assert.AreEqual(0, t.NumDependencies);
+        t.AddDependency("x", "b");
+        Assert.AreEqual(1, t.NumDependencies);
+        t.AddDependency("a", "z");
+        Assert.AreEqual(2, t.NumDependencies);
+
+        t.RemoveDependency("x", "b");
+        Assert.AreEqual(1, t.NumDependencies);
+        t.RemoveDependency("a", "z");
+        Assert.AreEqual(0, t.NumDependencies);
+    }
+
+    [TestMethod()]
+    public void CountFailedAddTest()
+    {
+        DependencyGraph t = new DependencyGraph();
+        Assert.AreEqual(0, t.NumDependencies);
+        t.AddDependency("x", "b");
+        Assert.AreEqual(1, t.NumDependencies);
+        t.AddDependency("x", "b");
+        Assert.AreEqual(1, t.NumDependencies);
+    }
+
+    [TestMethod()]
+    public void CountFailedRemoveTest()
+    {
+        DependencyGraph t = new DependencyGraph();
+        t.AddDependency("x", "b");
+        t.AddDependency("a", "z");
+
+        t.RemoveDependency("x", "a");
+        Assert.AreEqual(2, t.NumDependencies);
+        t.RemoveDependency("a", "z");
+        Assert.AreEqual(1, t.NumDependencies);
+        t.RemoveDependency("c", "z");
+        Assert.AreEqual(1, t.NumDependencies);
+        t.RemoveDependency("a", "c");
+        Assert.AreEqual(1, t.NumDependencies);
+    }
+
+    [TestMethod()]
+    public void hasDependentsTest()
+    {
+        DependencyGraph t = new DependencyGraph();
+        t.AddDependency("x", "b");
+        t.AddDependency("a", "z");
+        t.AddDependency("z", "x");
+
+        Assert.IsTrue(t.HasDependents("a"));
+        Assert.IsFalse(t.HasDependents("b"));
+    }
+
+    [TestMethod()]
+    public void hasDependeesTest()
+    {
+        DependencyGraph t = new DependencyGraph();
+        t.AddDependency("x", "b");
+        t.AddDependency("a", "z");
+        t.AddDependency("z", "x");
+
+        Assert.IsFalse(t.HasDependees("a"));
+        Assert.IsTrue(t.HasDependees("b"));
+    }
+
+    [TestMethod()]
+    public void NumDependeesTest()
+    {
+        DependencyGraph t = new DependencyGraph();
+        t.AddDependency("x", "b");
+        t.AddDependency("a", "z");
+        t.AddDependency("z", "x");
+        t.AddDependency("z", "b");
+
+        Assert.AreEqual(1, t.NumDependees("x"));
+        Assert.AreEqual(0, t.NumDependees("a"));
+        Assert.AreEqual(2, t.NumDependees("b"));
+    }
+
+    [TestMethod()]
+    public void AddDuplicateDependencyTest()
+    {
+        DependencyGraph t = new DependencyGraph();
+        t.AddDependency("x", "b");
+        t.AddDependency("a", "z");
+        t.AddDependency("z", "x");
+        t.AddDependency("z", "x");
+
+        Assert.AreEqual(3, t.NumDependencies);
+    }
+
+    [TestMethod()]
+    public void ReplaceThenCountTest()
+    {
+        DependencyGraph t = new DependencyGraph();
+        t.AddDependency("x", "b");
+        t.AddDependency("x", "z");
+        t.AddDependency("a", "z");
+        var st = new List<String>() {"b", "c", "d"};
+        t.ReplaceDependents("x", st);
+
+        Assert.AreEqual(4, t.NumDependencies);
+        Assert.AreEqual(1, t.NumDependees("z"));
+        Assert.AreEqual(3, t.GetDependents("x").Count());
+    }
 }

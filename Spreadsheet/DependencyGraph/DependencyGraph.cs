@@ -1,10 +1,12 @@
 // Skeleton implementation by: Joe Zachary, Daniel Kopta, Travis Martin for CS 3500
 // Last updated: August 2023 (small tweak to API)
 
+using System.Collections;
+
 namespace SpreadsheetUtilities;
 
 /// <summary>
-/// (s1,t1) is an ordered pair of strings
+/// (s1,t1) is an ordered pair of strings 
 /// t1 depends on s1; s1 must be evaluated before t1
 /// 
 /// A DependencyGraph can be modeled as a set of ordered pairs of strings.  Two ordered pairs
@@ -32,11 +34,27 @@ namespace SpreadsheetUtilities;
 /// </summary>
 public class DependencyGraph
 {
+    private int p_NumDependencies;
+    private Hashtable p_cells;
+
+    public Hashtable cells
+    {
+        get
+        {
+            return p_cells;
+        }
+        private set
+        {
+            p_cells = value;
+        }
+    }
     /// <summary>
     /// Creates an empty DependencyGraph.
     /// </summary>
     public DependencyGraph()
     {
+        cells = new Hashtable();
+        p_NumDependencies = 0;
     }
 
 
@@ -46,7 +64,7 @@ public class DependencyGraph
     /// </summary>
     public int NumDependencies
     {
-        get { return 0; }
+        get {return p_NumDependencies;}
     }
 
 
@@ -56,7 +74,7 @@ public class DependencyGraph
     /// </summary>
     public int NumDependees(string s)
     {
-        return 0;
+        return ((Node) cells[s]).dependees.Count;
     }
 
 
@@ -65,7 +83,7 @@ public class DependencyGraph
     /// </summary>
     public bool HasDependents(string s)
     {
-        return false;
+        return ((Node)cells[s]).dependents.Count > 0;
     }
 
 
@@ -74,7 +92,7 @@ public class DependencyGraph
     /// </summary>
     public bool HasDependees(string s)
     {
-        return false;
+        return ((Node)cells[s]).dependees.Count > 0;
     }
 
 
@@ -83,7 +101,7 @@ public class DependencyGraph
     /// </summary>
     public IEnumerable<string> GetDependents(string s)
     {
-        return null;
+        return ((Node) cells[s]).dependents;
     }
 
 
@@ -92,7 +110,7 @@ public class DependencyGraph
     /// </summary>
     public IEnumerable<string> GetDependees(string s)
     {
-        return null;
+        return ((Node)cells[s]).dependees;
     }
 
 
@@ -108,7 +126,33 @@ public class DependencyGraph
     /// <param name="t"> t cannot be evaluated until s is</param>
     public void AddDependency(string s, string t)
     {
-        /// write your code here
+        bool shouldAddDependency = true;
+
+        if (!cells.ContainsKey(s))
+        {
+            //create key
+            cells.Add(s, new Node());
+        }
+        if (!cells.ContainsKey(t))
+        {
+            //create key
+            cells.Add(t, new Node());
+        }
+
+        //add dependent and dependee relationship
+        if (!((Node)cells[t]).dependees.Contains(s))
+        {
+            ((Node)cells[t]).addDependee(s);
+        }
+        else shouldAddDependency = false;
+
+        if (!((Node)cells[s]).dependents.Contains(t))
+        {
+            ((Node)cells[s]).addDependent(t);
+        }
+        else shouldAddDependency = false;
+
+        if (shouldAddDependency) p_NumDependencies++;
     }
 
 
@@ -119,6 +163,23 @@ public class DependencyGraph
     /// <param name="t"></param>
     public void RemoveDependency(string s, string t)
     {
+        bool shouldRemoveDepency = true;
+
+        if (cells[t] != null)
+        {
+            if (((Node)cells[t]).dependees.Contains(s)) ((Node)cells[t]).removeDependee(s);
+            else shouldRemoveDepency = false;
+        }
+        else shouldRemoveDepency = false;
+
+        if (cells[s] != null)
+        {
+            if (((Node)cells[s]).dependents.Contains(t)) ((Node)cells[s]).removeDependent(t);
+            else shouldRemoveDepency = false;
+        }
+        else shouldRemoveDepency = false;
+
+        if (shouldRemoveDepency) p_NumDependencies--;
     }
 
 
@@ -128,6 +189,21 @@ public class DependencyGraph
     /// </summary>
     public void ReplaceDependents(string s, IEnumerable<string> newDependents)
     {
+        var removed = ((Node)cells[s]).removeAllDependents();
+
+        //remove dependee relationship from dependents
+        foreach(String d in removed)
+        {
+            ((Node)cells[d]).removeDependee(s);
+        }
+
+        p_NumDependencies -= removed.Count;
+        
+        //adds new relationships
+        foreach(String d in newDependents)
+        {
+            AddDependency(s, d);
+        }
     }
 
 
@@ -137,5 +213,113 @@ public class DependencyGraph
     /// </summary>
     public void ReplaceDependees(string s, IEnumerable<string> newDependees)
     {
+        var removed = ((Node)cells[s]).removeAllDependees();
+
+        //remove dependent relationship from dependees
+        foreach (String d in removed)
+        {
+            ((Node)cells[d]).removeDependent(s);
+        }
+
+        p_NumDependencies -= removed.Count;
+
+        //adds new relationships
+        foreach (String d in newDependees)
+        {
+            AddDependency(d, s);
+        }
+    }
+}
+
+
+class Node
+{
+    private List<String> p_dependents;
+    private List<String> p_dependees;
+
+    public List<String> dependents
+    {
+        get{
+            return p_dependents;
+        }
+        private set{
+            p_dependents = value;
+        }
+    }
+
+    public List<String> dependees
+    {
+        get
+        {
+            return p_dependees;
+        }
+        private set
+        {
+            p_dependees = value;
+        }
+    }
+
+    public Node()
+    {
+        dependees = new List<String>();
+        dependents = new List<String>();
+    }
+
+    /// <summary>
+    /// adds dependee
+    /// </summary>
+    /// <param name="dependee"></param>
+    public void addDependee(String dependee)
+    {
+        dependees.Add(dependee);
+    }
+
+    /// <summary>
+    /// adds dependent
+    /// </summary>
+    /// <param name="dependent"></param>
+    public void addDependent(String dependent)
+    {
+        dependents.Add(dependent);
+    }
+
+    /// <summary>
+    /// removes dependee
+    /// </summary>
+    /// <param name="dependee"></param>
+    public void removeDependee(String dependee)
+    {
+        dependees.Remove(dependee);
+    }
+
+    /// <summary>
+    /// removes dependent
+    /// </summary>
+    /// <param name="dependent"></param>
+    public void removeDependent(String dependent)
+    {
+        dependents.Remove(dependent);
+    }
+
+    /// <summary>
+    /// removes all dependents and returns a list of the previous dependents
+    /// </summary>
+    /// <returns>previous dependents</returns>
+    public List<String> removeAllDependents()
+    {
+        var toReturn = dependents;
+        dependents = new List<String>();
+        return toReturn;
+    }
+
+    /// <summary>
+    /// removes all dependees and returns a list of the previous dependees
+    /// </summary>
+    /// <returns>previous dependees</returns>
+    public List<String> removeAllDependees()
+    {
+        var toReturn = dependees;
+        dependees = new List<String>();
+        return toReturn;
     }
 }
