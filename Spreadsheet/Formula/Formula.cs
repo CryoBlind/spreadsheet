@@ -79,7 +79,7 @@ public class Formula
         //trim whitespace
         for (int i = 0; i < length; i++)
         {
-            tokens[i] = ((String)tokens[i]).Trim();
+            tokens[i] = ((String)tokens[i]!).Trim();
         }
 
         //normalize.  after, it is no longer garunteed that tokens contains only strings
@@ -160,8 +160,8 @@ public class Formula
         //    if (!Regex.IsMatch((string)tokens[0], @"(^\($)|(^[_a-zA-Z][_a-zA-Z0-9]*$)")) throw new FormulaFormatException("Starting token is not '(', a variable, or a number.");
 
         //6. ending token rule
-        if (tokens[tokens.Count - 1].GetType() == typeof(System.String))
-            if (!Regex.IsMatch((string)tokens[tokens.Count - 1], @"(^\)$)|(^[_a-zA-Z]{1,1}[_a-zA-Z0-9]*$)")) throw new FormulaFormatException("Ending token is not ')', a variable, or a number.");
+        if (tokens[tokens.Count - 1]!.GetType() == typeof(System.String))
+            if (!Regex.IsMatch((string)tokens[tokens.Count - 1]!, @"(^\)$)|(^[_a-zA-Z]{1,1}[_a-zA-Z0-9]*$)")) throw new FormulaFormatException("Ending token is not ')', a variable, or a number.");
 
         //4. balanced parenthesis
         if (leftParens != rightParens) throw new FormulaFormatException("Unbalanced Parenthesis.  Ensure all parenthesis are closed.");
@@ -176,15 +176,15 @@ public class Formula
         {
             try
             {
-                var n = Double.Parse((String)tokens[i]);
+                var n = Double.Parse((String)tokens[i]!);
                 //number case
                 copy.Add(n);
             }
             catch(FormatException)
             {
                 //not number
-                if(Regex.IsMatch((String)tokens[i], @"^[\(\)\+\-\*\/]$")) copy.Add(tokens[i]);
-                else copy.Add(normalize((String)tokens[i]));
+                if(Regex.IsMatch((String)tokens[i]!, @"^[\(\)\+\-\*\/]$")) copy.Add(tokens[i]);
+                else copy.Add(normalize((String)tokens[i]!));
             }
         }
         return copy;
@@ -221,7 +221,7 @@ public class Formula
         foreach (var token in tokens)
         {
             // value or variable case
-            if (token.GetType() == typeof(System.Double) || Regex.IsMatch(token.ToString(), @"^[_a-zA-Z][_a-zA-Z0-9]*$"))
+            if (token.GetType() == typeof(System.Double) || Regex.IsMatch(token.ToString()!, @"^[_a-zA-Z][_a-zA-Z0-9]*$"))
             {
                 double num;
                 if (token.GetType() == typeof(System.Double))
@@ -241,7 +241,7 @@ public class Formula
 
 
                 String op;
-                if (ops.TryPeek(out op))
+                if (ops.TryPeek(out op!))
                 {
                     if (Regex.IsMatch(op, @"^\*$"))
                     {
@@ -268,7 +268,7 @@ public class Formula
                     case "+" or "-":
                         {
                             String op;
-                            if (ops.TryPeek(out op))
+                            if (ops.TryPeek(out op!))
                             {
                                 if (op.Equals("+"))
                                 {
