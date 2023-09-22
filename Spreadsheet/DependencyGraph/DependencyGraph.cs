@@ -35,13 +35,13 @@ namespace SpreadsheetUtilities;
 public class DependencyGraph
 {
     private int p_NumDependencies;
-    private Hashtable p_cells;
+    private Hashtable? p_cells;
 
-    public Hashtable cells
+    public Hashtable Cells
     {
         get
         {
-            return p_cells;
+            return p_cells!;
         }
         private set
         {
@@ -53,7 +53,7 @@ public class DependencyGraph
     /// </summary>
     public DependencyGraph()
     {
-        cells = new Hashtable();
+        Cells = new Hashtable();
         p_NumDependencies = 0;
     }
 
@@ -74,8 +74,8 @@ public class DependencyGraph
     /// </summary>
     public int NumDependees(string s)
     {
-        if((Node)cells[s] != null) return ((Node) cells[s]).dependees.Count;
-        else return 0;
+        if ((Node)Cells[s]! == null) return 0;
+        else return ((Node)Cells[s]!).Dependees.Count;
     }
 
 
@@ -84,7 +84,7 @@ public class DependencyGraph
     /// </summary>
     public bool HasDependents(string s)
     {
-        if((Node)cells[s] != null) return ((Node)cells[s]).dependents.Count > 0;
+        if((Node)Cells[s]! != null) return ((Node)Cells[s]!).Dependents.Count > 0;
         else return false;
     }
 
@@ -94,7 +94,7 @@ public class DependencyGraph
     /// </summary>
     public bool HasDependees(string s)
     {
-        if ((Node)cells[s] != null) return ((Node)cells[s]).dependees.Count > 0;
+        if ((Node)Cells[s]! != null) return ((Node)Cells[s]!).Dependees.Count > 0;
         else return false;
     }
 
@@ -104,7 +104,7 @@ public class DependencyGraph
     /// </summary>
     public IEnumerable<string> GetDependents(string s)
     {
-        if ((Node)cells[s] != null) return ((Node)cells[s]).dependents;
+        if ((Node)Cells[s]! != null) return ((Node)Cells[s]!).Dependents;
         else return Enumerable.Empty<string>();
     }
 
@@ -114,7 +114,7 @@ public class DependencyGraph
     /// </summary>
     public IEnumerable<string> GetDependees(string s)
     {
-        if ((Node)cells[s] != null) return ((Node)cells[s]).dependees;
+        if ((Node)Cells[s]! != null) return ((Node)Cells[s]!).Dependees;
         else return Enumerable.Empty<string>();
     }
 
@@ -133,22 +133,22 @@ public class DependencyGraph
     {
         bool shouldAddDependency = true;
 
-        if (!cells.ContainsKey(s))
+        if (!Cells.ContainsKey(s))
         {
             //create key
-            cells.Add(s, new Node());
+            Cells.Add(s, new Node());
         }
-        if (!cells.ContainsKey(t))
+        if (!Cells.ContainsKey(t))
         {
             //create key
-            cells.Add(t, new Node());
+            Cells.Add(t, new Node());
         }
 
         //add dependent and dependee relationship
-        if (!((Node)cells[t]).dependees.Contains(s))
+        if (!((Node)Cells[t]!).Dependees.Contains(s))
         {
-            ((Node)cells[t]).addDependee(s);
-            ((Node)cells[s]).addDependent(t);
+            ((Node)Cells[t]!).AddDependee(s);
+            ((Node)Cells[s]!).AddDependent(t);
         }
         else shouldAddDependency = false;
 
@@ -165,12 +165,12 @@ public class DependencyGraph
     {
         bool shouldRemoveDepency = true;
 
-        if (cells[t] != null)
+        if (Cells[t] != null)
         {
-            if (((Node)cells[t]).dependees.Contains(s))
+            if (((Node)Cells[t]!).Dependees.Contains(s))
             {
-                ((Node)cells[t]).removeDependee(s);
-                ((Node)cells[s]).removeDependent(t);
+                ((Node)Cells[t]!).RemoveDependee(s);
+                ((Node)Cells[s]!).RemoveDependent(t);
             }
             else shouldRemoveDepency = false;
         }
@@ -186,18 +186,18 @@ public class DependencyGraph
     /// </summary>
     public void ReplaceDependents(string s, IEnumerable<string> newDependents)
     {
-        if (!cells.ContainsKey(s))
+        if (!Cells.ContainsKey(s))
         {
             //create key
-            cells.Add(s, new Node());
+            Cells.Add(s, new Node());
         }
 
-        var removed = ((Node)cells[s]).removeAllDependents();
+        var removed = ((Node)Cells[s]!).RemoveAllDependents();
 
         //remove dependee relationship from dependents
         foreach(String d in removed)
         {
-            ((Node)cells[d]).removeDependee(s);
+            ((Node)Cells[d]!).RemoveDependee(s);
         }
 
         p_NumDependencies -= removed.Count;
@@ -216,19 +216,19 @@ public class DependencyGraph
     /// </summary>
     public void ReplaceDependees(string s, IEnumerable<string> newDependees)
     {
-        if (!cells.ContainsKey(s))
+        if (!Cells.ContainsKey(s))
         {
             //create key
-            cells.Add(s, new Node());
+            Cells.Add(s, new Node());
         }
 
-        var removed = ((Node)cells[s]).removeAllDependees();
+        var removed = ((Node)Cells[s]!).RemoveAllDependees();
         //p_NumDependencies -= removed.Count;
 
         //remove dependent relationship from dependees
         foreach (String d in removed)
         {
-            ((Node)cells[d]).removeDependent(s);
+            ((Node)Cells[d]!).RemoveDependent(s);
         }
 
         p_NumDependencies -= removed.Count;
@@ -244,24 +244,24 @@ public class DependencyGraph
 
 class Node
 {
-    private List<String> p_dependents;
-    private List<String> p_dependees;
+    private List<String>? p_dependents;
+    private List<String>? p_dependees;
 
-    public List<String> dependents
+    public List<String> Dependents
     {
         get{
-            return p_dependents;
+            return p_dependents!;
         }
         private set{
             p_dependents = value;
         }
     }
 
-    public List<String> dependees
+    public List<String> Dependees
     {
         get
         {
-            return p_dependees;
+            return p_dependees!;
         }
         private set
         {
@@ -271,54 +271,54 @@ class Node
 
     public Node()
     {
-        dependees = new List<String>();
-        dependents = new List<String>();
+        Dependees = new List<String>();
+        Dependents = new List<String>();
     }
 
     /// <summary>
     /// adds dependee
     /// </summary>
     /// <param name="dependee"></param>
-    public void addDependee(String dependee)
+    public void AddDependee(String dependee)
     {
-        dependees.Add(dependee);
+        Dependees.Add(dependee);
     }
 
     /// <summary>
     /// adds dependent
     /// </summary>
     /// <param name="dependent"></param>
-    public void addDependent(String dependent)
+    public void AddDependent(String dependent)
     {
-        dependents.Add(dependent);
+        Dependents.Add(dependent);
     }
 
     /// <summary>
     /// removes dependee
     /// </summary>
     /// <param name="dependee"></param>
-    public void removeDependee(String dependee)
+    public void RemoveDependee(String dependee)
     {
-        dependees.Remove(dependee);
+        Dependees.Remove(dependee);
     }
 
     /// <summary>
     /// removes dependent
     /// </summary>
     /// <param name="dependent"></param>
-    public void removeDependent(String dependent)
+    public void RemoveDependent(String dependent)
     {
-        dependents.Remove(dependent);
+        Dependents.Remove(dependent);
     }
 
     /// <summary>
     /// removes all dependents and returns a list of the previous dependents
     /// </summary>
     /// <returns>previous dependents</returns>
-    public List<String> removeAllDependents()
+    public List<String> RemoveAllDependents()
     {
-        var toReturn = dependents;
-        dependents = new List<String>();
+        var toReturn = Dependents;
+        Dependents = new List<String>();
         return toReturn;
     }
 
@@ -326,10 +326,10 @@ class Node
     /// removes all dependees and returns a list of the previous dependees
     /// </summary>
     /// <returns>previous dependees</returns>
-    public List<String> removeAllDependees()
+    public List<String> RemoveAllDependees()
     {
-        var toReturn = dependees;
-        dependees = new List<String>();
+        var toReturn = Dependees;
+        Dependees = new List<String>();
         return toReturn;
     }
 }
