@@ -145,7 +145,7 @@ public class DependencyGraph
         }
 
         //add dependent and dependee relationship
-        if (!((Node)Cells[t]!).Dependees.Contains(s))
+        if (((Node)Cells[t]!).HashDependees[s] == null)
         {
             ((Node)Cells[t]!).AddDependee(s);
             ((Node)Cells[s]!).AddDependent(t);
@@ -247,6 +247,19 @@ class Node
     private List<String>? p_dependents;
     private List<String>? p_dependees;
 
+    private Hashtable dees;
+    private Hashtable dents;
+    public Hashtable HashDependees
+    {
+        get { return dees; }
+        private set { dees = value; }
+    }
+
+    public Hashtable HashDependents
+    {
+        get { return dents; }
+        private set { dents = value; }
+    }
     public List<String> Dependents
     {
         get{
@@ -271,6 +284,8 @@ class Node
 
     public Node()
     {
+        dees = new Hashtable();
+        dents = new Hashtable();
         Dependees = new List<String>();
         Dependents = new List<String>();
     }
@@ -282,6 +297,7 @@ class Node
     public void AddDependee(String dependee)
     {
         Dependees.Add(dependee);
+        dees[dependee] = "";
     }
 
     /// <summary>
@@ -291,6 +307,7 @@ class Node
     public void AddDependent(String dependent)
     {
         Dependents.Add(dependent);
+        dents[dependent] = "";
     }
 
     /// <summary>
@@ -300,6 +317,7 @@ class Node
     public void RemoveDependee(String dependee)
     {
         Dependees.Remove(dependee);
+        dees[dependee] = null;
     }
 
     /// <summary>
@@ -309,6 +327,7 @@ class Node
     public void RemoveDependent(String dependent)
     {
         Dependents.Remove(dependent);
+        dents[dependent] = null;
     }
 
     /// <summary>
