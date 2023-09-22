@@ -74,7 +74,7 @@ public class DependencyGraph
     /// </summary>
     public int NumDependees(string s)
     {
-        if ((Node)Cells[s]! == null) return 0;
+        if (Cells[s] == null) return 0;
         else return ((Node)Cells[s]!).Dependees.Count;
     }
 
@@ -84,7 +84,7 @@ public class DependencyGraph
     /// </summary>
     public bool HasDependents(string s)
     {
-        if((Node)Cells[s]! != null) return ((Node)Cells[s]!).Dependents.Count > 0;
+        if(Cells[s] != null) return ((Node)Cells[s]!).Dependents.Count > 0;
         else return false;
     }
 
@@ -94,7 +94,7 @@ public class DependencyGraph
     /// </summary>
     public bool HasDependees(string s)
     {
-        if ((Node)Cells[s]! != null) return ((Node)Cells[s]!).Dependees.Count > 0;
+        if (Cells[s] != null) return ((Node)Cells[s]!).Dependees.Count > 0;
         else return false;
     }
 
@@ -104,7 +104,7 @@ public class DependencyGraph
     /// </summary>
     public IEnumerable<string> GetDependents(string s)
     {
-        if ((Node)Cells[s]! != null) return ((Node)Cells[s]!).Dependents;
+        if (Cells[s] != null) return ((Node)Cells[s]!).Dependents;
         else return Enumerable.Empty<string>();
     }
 
@@ -114,7 +114,7 @@ public class DependencyGraph
     /// </summary>
     public IEnumerable<string> GetDependees(string s)
     {
-        if ((Node)Cells[s]! != null) return ((Node)Cells[s]!).Dependees;
+        if (Cells[s] != null) return ((Node)Cells[s]!).Dependees;
         else return Enumerable.Empty<string>();
     }
 

@@ -182,19 +182,19 @@ public abstract class AbstractSpreadsheet
     /// </summary>
     private void Visit(string start, string name, ISet<string> visited, LinkedList<string> changed)
     {
-        visited.Add(name);
-        foreach (string n in GetDirectDependents(name))
+        visited.Add(name); //start at the given node
+        foreach (string n in GetDirectDependents(name)) //loop through each of the given node's direct dependents
         {
             if (n.Equals(start))
             {
-                throw new CircularException();
+                throw new CircularException(); //check for dependency loops
             }
             else if (!visited.Contains(n))
             {
-                Visit(start, n, visited, changed);
+                Visit(start, n, visited, changed); //recursively call the function until there are no dependencies on a node
             }
         }
-        changed.AddFirst(name);
+        changed.AddFirst(name); //add a node to the list of dependencies that need to be changed
     }
 
 }

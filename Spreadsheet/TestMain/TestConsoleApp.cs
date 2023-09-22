@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-using FormulaEvaluator;
-using SpreadsheetUtilities;
+﻿using SpreadsheetUtilities;
 using System.Collections;
 using System.Text.RegularExpressions;
 
