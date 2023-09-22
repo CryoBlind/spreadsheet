@@ -38,7 +38,7 @@ namespace SpreadsheetUtilities
             private set { p_value = value; }
         }
 
-        private readonly Func<string, double> lookup;
+        private readonly Func<string, double>? lookup;
 
         /// <summary>
         /// creates a cell with a number in it
@@ -46,6 +46,9 @@ namespace SpreadsheetUtilities
         /// <param name="name">the name of the cell</param>
         public Cell(string name, double number)
         {
+            p_value = "";
+            p_contents = number;
+            p_name = name;
             Name = name;
             Contents = number;
         }
@@ -55,6 +58,9 @@ namespace SpreadsheetUtilities
         /// <param name="name">the name of the cell</param>
         public Cell(string name, string text)
         {
+            p_value = "";
+            p_contents = text;
+            p_name = name;
             Name = name;
             Contents = text;
         }
@@ -65,6 +71,9 @@ namespace SpreadsheetUtilities
         /// <param name="lookup"> lookup function used for formulas</param>
         public Cell(string name, Formula formula, Func<string, double> lookup)
         {
+            p_value = "";
+            p_contents = formula;
+            p_name = name;
             this.lookup = lookup;
             Name = name;
             Contents = formula;
@@ -84,10 +93,10 @@ namespace SpreadsheetUtilities
             //if formula, evalute
             if (Contents.GetType() == typeof(Formula)) 
             {
-                var s = ((Formula)Contents).Evaluate(lookup); 
+                var s = ((Formula)Contents).Evaluate(lookup!); 
                 if (s.GetType() != typeof(FormulaError)) 
                 {
-                    Value = s.ToString();
+                    Value = s.ToString()!;
                 }
                 else
                 {
@@ -97,7 +106,7 @@ namespace SpreadsheetUtilities
             //if double, convert to string
             if(Contents.GetType() == typeof(double))
             {
-                Value = Contents.ToString();
+                Value = Contents.ToString()!;
             }
         }
     }
