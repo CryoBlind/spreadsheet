@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpreadsheetUtilities;
 
-namespace DevelopmentTests;
+namespace DependencyGraphTests;
 
 /// <summary>
 ///This is a test class for DependencyGraphTest and is intended

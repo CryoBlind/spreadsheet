@@ -74,7 +74,8 @@ public class DependencyGraph
     /// </summary>
     public int NumDependees(string s)
     {
-        return ((Node) cells[s]).dependees.Count;
+        if((Node)cells[s] != null) return ((Node) cells[s]).dependees.Count;
+        else return 0;
     }
 
 
@@ -83,7 +84,8 @@ public class DependencyGraph
     /// </summary>
     public bool HasDependents(string s)
     {
-        return ((Node)cells[s]).dependents.Count > 0;
+        if((Node)cells[s] != null) return ((Node)cells[s]).dependents.Count > 0;
+        else return false;
     }
 
 
@@ -92,7 +94,8 @@ public class DependencyGraph
     /// </summary>
     public bool HasDependees(string s)
     {
-        return ((Node)cells[s]).dependees.Count > 0;
+        if ((Node)cells[s] != null) return ((Node)cells[s]).dependees.Count > 0;
+        else return false;
     }
 
 
@@ -101,7 +104,8 @@ public class DependencyGraph
     /// </summary>
     public IEnumerable<string> GetDependents(string s)
     {
-        return ((Node) cells[s]).dependents;
+        if ((Node)cells[s] != null) return ((Node)cells[s]).dependents;
+        else return Enumerable.Empty<string>();
     }
 
 
@@ -110,7 +114,8 @@ public class DependencyGraph
     /// </summary>
     public IEnumerable<string> GetDependees(string s)
     {
-        return ((Node)cells[s]).dependees;
+        if ((Node)cells[s] != null) return ((Node)cells[s]).dependees;
+        else return Enumerable.Empty<string>();
     }
 
 
@@ -143,11 +148,6 @@ public class DependencyGraph
         if (!((Node)cells[t]).dependees.Contains(s))
         {
             ((Node)cells[t]).addDependee(s);
-        }
-        else shouldAddDependency = false;
-
-        if (!((Node)cells[s]).dependents.Contains(t))
-        {
             ((Node)cells[s]).addDependent(t);
         }
         else shouldAddDependency = false;
@@ -167,14 +167,11 @@ public class DependencyGraph
 
         if (cells[t] != null)
         {
-            if (((Node)cells[t]).dependees.Contains(s)) ((Node)cells[t]).removeDependee(s);
-            else shouldRemoveDepency = false;
-        }
-        else shouldRemoveDepency = false;
-
-        if (cells[s] != null)
-        {
-            if (((Node)cells[s]).dependents.Contains(t)) ((Node)cells[s]).removeDependent(t);
+            if (((Node)cells[t]).dependees.Contains(s))
+            {
+                ((Node)cells[t]).removeDependee(s);
+                ((Node)cells[s]).removeDependent(t);
+            }
             else shouldRemoveDepency = false;
         }
         else shouldRemoveDepency = false;
@@ -189,6 +186,12 @@ public class DependencyGraph
     /// </summary>
     public void ReplaceDependents(string s, IEnumerable<string> newDependents)
     {
+        if (!cells.ContainsKey(s))
+        {
+            //create key
+            cells.Add(s, new Node());
+        }
+
         var removed = ((Node)cells[s]).removeAllDependents();
 
         //remove dependee relationship from dependents
@@ -213,7 +216,14 @@ public class DependencyGraph
     /// </summary>
     public void ReplaceDependees(string s, IEnumerable<string> newDependees)
     {
+        if (!cells.ContainsKey(s))
+        {
+            //create key
+            cells.Add(s, new Node());
+        }
+
         var removed = ((Node)cells[s]).removeAllDependees();
+        //p_NumDependencies -= removed.Count;
 
         //remove dependent relationship from dependees
         foreach (String d in removed)
