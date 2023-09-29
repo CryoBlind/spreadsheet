@@ -20,7 +20,13 @@ namespace SS
         /// <summary>
         /// creates a Spreadsheet object
         /// </summary>
-        public Spreadsheet()
+        public Spreadsheet() : base("")
+        {
+            this.cells = new Hashtable();
+            this.dependencyGraph = new DependencyGraph();
+        }
+
+        public Spreadsheet(string version) : base(version)
         {
             this.cells = new Hashtable();
             this.dependencyGraph = new DependencyGraph();
@@ -34,48 +40,133 @@ namespace SS
             else return "";
         }
 
+        public override object GetCellValue(string name)
+        {
+            if (!IsValidName(name)) throw new InvalidNameException();
+
+            if (cells[name] != null) return ((Cell)cells[name]!).Value;
+            else return "";
+        }
+
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
             var nonemptyCells = new List<string>();
             foreach(var cell in cells.Values)
             {
-                if (((Cell)cell).Contents.GetType() == typeof(string))
-                    if (!((Cell)cell).Value.Equals(""))
+                if (cell != null)
+                {
+                    if (((Cell)cell).Contents.GetType() == typeof(string))
+                    {
+                        if (!((Cell)cell).Contents.Equals(""))
+                            nonemptyCells.Add(((Cell)cell).Name);
+                    }
+                    else
+                    {
                         nonemptyCells.Add(((Cell)cell).Name);
+                    }
+                }
             }
 
             return nonemptyCells;
         }
 
-        public override IList<string> SetCellContents(string name, double number)
+        public override IList<string> SetContentsOfCell(string name, string content)
         {
             if (!IsValidName(name)) throw new InvalidNameException();
+
+            double parseResult;
+            if (Double.TryParse(content, out parseResult))
+            {
+                return SetCellContents(name, parseResult);
+            }
+            else if (content.StartsWith("="))
+            {
+                return SetCellContents(name, new Formula(content.Substring(1)));
+            }
+            else return SetCellContents(name, content);
+        }
+
+        protected override IList<string> SetCellContents(string name, double number)
+        {
+            if (!IsValidName(name)) throw new InvalidNameException();
+
+            var previous = cells[name];
+
+            //check if a dependency needs to be removed
+            if (previous != null)
+            {
+                var p = ((Cell)previous).Contents;
+                if (p.GetType() == typeof(Formula))
+                {
+                    //remove dependency relationships
+                    foreach (var s in ((Formula)p).GetVariables())
+                    {
+                        dependencyGraph.RemoveDependency(s, name);
+                    }
+                }
+            }
 
             cells[name] = new Cell(name, number);
 
             var allDependents = GetCellsToRecalculate(name);
-            var toReturn = allDependents.Prepend(name).ToList();
+            List<string> toReturn;
+            if (!allDependents.Contains<string>(name)) toReturn = allDependents.Prepend(name).ToList();
+            else toReturn = allDependents.ToList();
 
             RecalculateCells(allDependents);
             return toReturn;
         }
 
-        public override IList<string> SetCellContents(string name, string text)
+        protected override IList<string> SetCellContents(string name, string text)
         {
             if (!IsValidName(name)) throw new InvalidNameException();
+
+            var previous = cells[name];
+
+            //check if a dependency needs to be removed
+            if (previous != null)
+            {
+                var p = ((Cell)previous).Contents;
+                if (p.GetType() == typeof(Formula))
+                {
+                    //remove dependency relationships
+                    foreach (var s in ((Formula)p).GetVariables())
+                    {
+                        dependencyGraph.RemoveDependency(s, name);
+                    }
+                }
+            }
 
             cells[name] = new Cell(name, text);
 
             var allDependents = GetCellsToRecalculate(name);
-            var toReturn = allDependents.Prepend(name).ToList();
+            List<string> toReturn;
+            if (!allDependents.Contains<string>(name)) toReturn = allDependents.Prepend(name).ToList();
+            else toReturn = allDependents.ToList();
 
             RecalculateCells(allDependents);
             return toReturn;
         }
 
-        public override IList<string> SetCellContents(string name, Formula formula)
+        protected override IList<string> SetCellContents(string name, Formula formula)
         {
             if (!IsValidName(name)) throw new InvalidNameException();
+
+            var previous = cells[name];
+
+            //check if a dependency needs to be removed
+            if(previous != null)
+            {
+                var p = ((Cell)previous).Contents;
+                if (p.GetType() == typeof(Formula))
+                {
+                    //remove dependency relationships
+                    foreach (var s in ((Formula)p).GetVariables())
+                    {
+                        dependencyGraph.RemoveDependency(s, name);
+                    }
+                }
+            }
 
             cells[name] = new Cell(name, formula, LookupVariable);
 
@@ -84,9 +175,28 @@ namespace SS
             {
                 dependencyGraph.AddDependency(s, name);
             }
+            
+            IEnumerable<string> allDependents = new List<string>();
+            List<string> toReturn = new List<string>();
 
-            var allDependents = GetCellsToRecalculate(name);
-            var toReturn = allDependents.Prepend(name).ToList();
+            try
+            {
+                allDependents = GetCellsToRecalculate(name);
+                if (!allDependents.Contains<string>(name)) toReturn = allDependents.Prepend(name).ToList();
+                else toReturn = allDependents.ToList();
+            }
+            catch (CircularException)
+            {
+                cells[name] = previous;
+
+                //remove dependency relationships
+                foreach (var s in formula.GetVariables())
+                {
+                    dependencyGraph.RemoveDependency(s, name);
+                }
+
+                throw new CircularException();
+            }
 
             RecalculateCells(allDependents);
             return toReturn;
@@ -112,19 +222,6 @@ namespace SS
         }
 
         /// <summary>
-        /// works the same as getCellContents, but returns the value instead
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        /// <exception cref="InvalidNameException"></exception>
-        public string GetCellValue(string name)
-        {
-            if (!IsValidName(name)) throw new InvalidNameException();
-
-            if (cells[name] != null) return ((Cell)cells[name]!).Value;
-            else return "";
-        }
-        /// <summary>
         /// checks if a given string is a valid name
         /// </summary>
         /// <returns>true if the string is valid, false otherwise</returns>
@@ -133,6 +230,7 @@ namespace SS
             if (Regex.IsMatch(s, @"^[_a-zA-Z][_a-zA-Z0-9]*$")) return true;
             else return false;
         }
+
         /// <summary>
         /// looks up variable names
         /// </summary>
@@ -143,13 +241,28 @@ namespace SS
             var v = cells[name];
             if (v == null) throw new ArgumentException("variable not found");
 
-            double parseResult;
-            if (Double.TryParse(((Cell)v).Value, out parseResult))
+            if (((Cell)v).Value.GetType() == typeof(double))
             {
-                return parseResult;
+                return (double)((Cell)v).Value;
             }
             else throw new ArgumentException("variable not found");
         }
+
+
+
+
+
+
+
+
+        public override void Save(string filename)
+        {
+            throw new NotImplementedException();
+        }
+
+        
+
+        
     }
 }
 

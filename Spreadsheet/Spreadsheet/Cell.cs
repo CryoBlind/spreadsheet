@@ -29,10 +29,10 @@ namespace SpreadsheetUtilities
         }
 
         /// <summary>
-        /// value, stored as string, ready to display
+        /// value
         /// </summary>
-        private string p_value;
-        public string Value
+        private object p_value;
+        public object Value
         {
             get { return p_value; }
             private set { p_value = value; }
@@ -94,19 +94,14 @@ namespace SpreadsheetUtilities
             if (Contents.GetType() == typeof(Formula)) 
             {
                 var s = ((Formula)Contents).Evaluate(lookup!); 
-                if (s.GetType() != typeof(FormulaError)) 
-                {
-                    Value = s.ToString()!;
-                }
-                else
-                {
-                    Value = ((FormulaError)s).Reason;
-                }
+                Value = s;
+                return;
             }
-            //if double, convert to string
+            //if double, set value to contents
             if(Contents.GetType() == typeof(double))
             {
-                Value = Contents.ToString()!;
+                Value = (double)Contents;
+                return;
             }
         }
     }
