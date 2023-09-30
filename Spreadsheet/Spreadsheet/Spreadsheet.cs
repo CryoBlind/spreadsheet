@@ -79,10 +79,18 @@ namespace SS
 
             if (temp!.Version == null || temp.Cells == null) throw new SpreadsheetReadWriteException("Null values in Json File");
             if (!temp.Version.Equals(Version)) throw new SpreadsheetReadWriteException("Version of file does not match spreadsheet version");
-            foreach (string key in temp.Cells!.Keys)
+            try
             {
-                SetContentsOfCell(key, ((JsonElement)temp.Cells[key]!).GetProperty("StringForm").ToString());
+                foreach (string key in temp.Cells!.Keys)
+                {
+                    SetContentsOfCell(key, ((JsonElement)temp.Cells[key]!).GetProperty("StringForm").ToString());
+                }
+            } 
+            catch(Exception e)
+            {
+                throw new SpreadsheetReadWriteException(e.Message);
             }
+            
         }
 
         public override object GetCellContents(string name)
