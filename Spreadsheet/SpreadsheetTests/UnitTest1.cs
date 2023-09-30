@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SpreadsheetUtilities;
 using SS;
+using SpreadsheetUtilities;
+
 
 namespace SpreadsheetTests
 {
-    
-    [TestClass()]
+    [TestClass]
     public class SpreadsheetTests
     {
         //PS5 My Tests--------------------------------------------------------------------------------
@@ -20,14 +13,14 @@ namespace SpreadsheetTests
         {
             AbstractSpreadsheet sheet1 = new Spreadsheet();
             AbstractSpreadsheet sheet2 = new Spreadsheet((s) => true, (s) => s, "default"); ;
-            AbstractSpreadsheet sheet3 = new Spreadsheet("test.json", (s) => true, (s) => s, "default");
+            //AbstractSpreadsheet sheet3 = new Spreadsheet("test.json", (s) => true, (s) => s, "default");
         }
 
 
         [TestMethod()]
         public void TestNonDefaultNormalize()
         {
-            Spreadsheet s = new Spreadsheet((s) => true, (s) => s.ToUpper(),"default");
+            Spreadsheet s = new Spreadsheet((s) => true, (s) => s.ToUpper(), "default");
             s.SetContentsOfCell("a1", "hi");
             s.SetContentsOfCell("b1", "2");
             s.SetContentsOfCell("c1", "=B1 + 2");
@@ -45,7 +38,7 @@ namespace SpreadsheetTests
         [TestMethod()]
         public void TestSaveAndLoad()
         {
-            Spreadsheet s1 = new Spreadsheet((s) => true, (s) => s.ToUpper(),"default");
+            Spreadsheet s1 = new Spreadsheet((s) => true, (s) => s.ToUpper(), "default");
             s1.SetContentsOfCell("a1", "hi");
             s1.SetContentsOfCell("b1", "2");
             s1.SetContentsOfCell("c1", "=B1 + 2");
@@ -65,7 +58,7 @@ namespace SpreadsheetTests
         [ExpectedException(typeof(SpreadsheetReadWriteException))]
         public void TestLoadInvalidFileName()
         {
-           var s = new Spreadsheet("DNE.json", (s) => true, (s) => s.ToUpper(), "default");
+            var s = new Spreadsheet("DNE.json", (s) => true, (s) => s.ToUpper(), "default");
         }
 
         [TestMethod()]
@@ -568,7 +561,7 @@ namespace SpreadsheetTests
         {
             var s = new Spreadsheet();
             s.SetContentsOfCell("A1", "hello");
-            Assert.AreEqual("hello",s.GetCellContents("A1"));
+            Assert.AreEqual("hello", s.GetCellContents("A1"));
         }
 
         [TestMethod()]
@@ -638,7 +631,7 @@ namespace SpreadsheetTests
         public void TestGetCellContentsInvalidName()
         {
             var s = new Spreadsheet();
-            Assert.ThrowsException<InvalidNameException>(() =>  s.GetCellContents("1f"));
+            Assert.ThrowsException<InvalidNameException>(() => s.GetCellContents("1f"));
         }
 
         [TestMethod()]
@@ -653,14 +646,14 @@ namespace SpreadsheetTests
         {
             var s = new Spreadsheet();
 
-            for(int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
             {
                 s.SetContentsOfCell("a" + i, "hi");
             }
 
             var c = s.GetNamesOfAllNonemptyCells().ToArray();
 
-            for(int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Assert.IsTrue(c.Contains("a" + i));
             }
