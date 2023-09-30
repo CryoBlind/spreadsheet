@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace SpreadsheetUtilities
@@ -12,6 +13,7 @@ namespace SpreadsheetUtilities
         /// name of the cell
         /// </summary>
         private string p_name;
+        [JsonIgnore]
         public string Name
         {
             get { return p_name; }
@@ -22,6 +24,7 @@ namespace SpreadsheetUtilities
         /// raw contents, double, formula, or string
         /// </summary>
         private object p_contents;
+        [JsonIgnore]
         public object Contents
         {
             get { return p_contents; }
@@ -32,6 +35,7 @@ namespace SpreadsheetUtilities
         /// value
         /// </summary>
         private object p_value;
+        [JsonIgnore]
         public object Value
         {
             get { return p_value; }
@@ -39,6 +43,13 @@ namespace SpreadsheetUtilities
         }
 
         private readonly Func<string, double>? lookup;
+
+        private string p_StringForm;
+
+        public string StringForm
+        {
+            get { return p_StringForm; }
+        }
 
         /// <summary>
         /// creates a cell with a number in it
@@ -51,6 +62,7 @@ namespace SpreadsheetUtilities
             p_name = name;
             Name = name;
             Contents = number;
+            p_StringForm = "" + number;
         }
         /// <summary>
         /// creates a cell with a string in it
@@ -63,6 +75,7 @@ namespace SpreadsheetUtilities
             p_name = name;
             Name = name;
             Contents = text;
+            p_StringForm = text;
         }
         /// <summary>
         /// creates a cell with a formula and lookup function
@@ -77,6 +90,7 @@ namespace SpreadsheetUtilities
             this.lookup = lookup;
             Name = name;
             Contents = formula;
+            p_StringForm = "=" + formula.ToString();
         }
 
         /// <summary>

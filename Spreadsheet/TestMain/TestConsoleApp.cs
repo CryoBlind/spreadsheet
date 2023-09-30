@@ -1,17 +1,11 @@
 ﻿using SpreadsheetUtilities;
 using System.Collections;
 using System.Text.RegularExpressions;
+using SS;
 
-var a = new ArrayList();
-a.Add(5.5d);
-a.Add("hello");
-a.Add(Double.Parse("500.5"));
-a.Add(Double.Parse("500.500"));
-a.Add(Double.Parse("5.005e2"));
-a.Add(Double.Parse("500.500000000"));
-foreach (var i in a)
-{
-    Console.WriteLine(i.GetType() + " - " + i.ToString());
-}
-Console.WriteLine("");
-Console.WriteLine(a[1].ToString());
+var s = new Spreadsheet();
+s.SetContentsOfCell("A1", "2");
+s.SetContentsOfCell("A2", "=A3+1");
+s.Save("test.json");
+s = new Spreadsheet("test.json", (s) => s, (s) => true, "default");
+Console.WriteLine(File.ReadAllText("test.json"));

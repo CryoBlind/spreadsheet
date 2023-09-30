@@ -2,10 +2,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SS
@@ -13,45 +18,95 @@ namespace SS
     public class Spreadsheet : AbstractSpreadsheet
     {
         //a hashtable that pairs a name with a cell object
-        private readonly Hashtable cells;
+        private Hashtable p_cells;
+        public Hashtable Cells
+        {
+            get { return p_cells; }
+        }
         //the dependency graph for the spreadsheet
         private readonly DependencyGraph dependencyGraph;
+
+        //delegates for IsValid and Normalize
+        private Func<string, bool> IsValid;
+        private Func<string, string> Normalize;
 
         /// <summary>
         /// creates a Spreadsheet object
         /// </summary>
-        public Spreadsheet() : base("")
+        public Spreadsheet() : base("default")
         {
-            this.cells = new Hashtable();
+            this.p_cells = new Hashtable();
             this.dependencyGraph = new DependencyGraph();
+            Normalize = (s) => s;
+            IsValid = (s) => true;
+            Changed = false;
         }
 
-        public Spreadsheet(string version) : base(version)
+        public Spreadsheet(Func<string, string> Normalize, Func<string, bool> IsValid, string version) : base(version)
         {
-            this.cells = new Hashtable();
+            this.p_cells = new Hashtable();
             this.dependencyGraph = new DependencyGraph();
+            this.Normalize= Normalize;
+            this.IsValid = IsValid;
+            Changed = false;
+        }
+
+        public Spreadsheet(string filepath, Func<string, string> Normalize, Func<string, bool> IsValid, string version) : base(version)
+        {
+            this.p_cells = new Hashtable();
+            this.dependencyGraph = new DependencyGraph();
+            this.Normalize = Normalize;
+            this.IsValid = IsValid;
+            Changed = false;
+
+            //Read from file
+            string? json;
+            try 
+            { 
+                json = File.ReadAllText(filepath); 
+            }
+            catch (Exception e) { throw new SpreadsheetReadWriteException("File Read Failed: " + e.Message); }
+
+            SpreadsheetData? temp;
+            try
+            {
+                temp = JsonSerializer.Deserialize<SpreadsheetData>(json);
+            } 
+            catch (Exception e)
+            {
+                throw new SpreadsheetReadWriteException(e.Message);
+            }
+
+            if (temp!.Version == null || temp.Cells == null) throw new SpreadsheetReadWriteException("Null values in Json File");
+            if (!temp.Version.Equals(Version)) throw new SpreadsheetReadWriteException("Version of file does not match spreadsheet version");
+            foreach (string key in temp.Cells!.Keys)
+            {
+                SetContentsOfCell(key, ((JsonElement)temp.Cells[key]!).GetProperty("StringForm").ToString());
+            }
         }
 
         public override object GetCellContents(string name)
         {
+            name = Normalize(name);
             if(!IsValidName(name)) throw new InvalidNameException();
 
-            if (cells[name] != null) return ((Cell)cells[name]!).Contents;
+            if (p_cells[name] != null) return ((Cell)p_cells[name]!).Contents;
             else return "";
         }
 
         public override object GetCellValue(string name)
         {
+            name = Normalize(name);
             if (!IsValidName(name)) throw new InvalidNameException();
 
-            if (cells[name] != null) return ((Cell)cells[name]!).Value;
+            if (p_cells[name] != null) return ((Cell)p_cells[name]!).Value;
             else return "";
         }
 
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
             var nonemptyCells = new List<string>();
-            foreach(var cell in cells.Values)
+            foreach(var cell in p_cells.Values)
             {
                 if (cell != null)
                 {
@@ -72,6 +127,7 @@ namespace SS
 
         public override IList<string> SetContentsOfCell(string name, string content)
         {
+            name = Normalize(name);
             if (!IsValidName(name)) throw new InvalidNameException();
 
             double parseResult;
@@ -81,16 +137,14 @@ namespace SS
             }
             else if (content.StartsWith("="))
             {
-                return SetCellContents(name, new Formula(content.Substring(1)));
+                return SetCellContents(name, new Formula(content.Substring(1), Normalize, IsValid));
             }
             else return SetCellContents(name, content);
         }
 
         protected override IList<string> SetCellContents(string name, double number)
         {
-            if (!IsValidName(name)) throw new InvalidNameException();
-
-            var previous = cells[name];
+            var previous = p_cells[name];
 
             //check if a dependency needs to be removed
             if (previous != null)
@@ -106,7 +160,7 @@ namespace SS
                 }
             }
 
-            cells[name] = new Cell(name, number);
+            p_cells[name] = new Cell(name, number);
 
             var allDependents = GetCellsToRecalculate(name);
             List<string> toReturn;
@@ -114,14 +168,13 @@ namespace SS
             else toReturn = allDependents.ToList();
 
             RecalculateCells(allDependents);
+            Changed = true;
             return toReturn;
         }
 
         protected override IList<string> SetCellContents(string name, string text)
         {
-            if (!IsValidName(name)) throw new InvalidNameException();
-
-            var previous = cells[name];
+            var previous = p_cells[name];
 
             //check if a dependency needs to be removed
             if (previous != null)
@@ -137,7 +190,7 @@ namespace SS
                 }
             }
 
-            cells[name] = new Cell(name, text);
+            p_cells[name] = new Cell(name, text);
 
             var allDependents = GetCellsToRecalculate(name);
             List<string> toReturn;
@@ -145,14 +198,13 @@ namespace SS
             else toReturn = allDependents.ToList();
 
             RecalculateCells(allDependents);
+            Changed = true;
             return toReturn;
         }
 
         protected override IList<string> SetCellContents(string name, Formula formula)
         {
-            if (!IsValidName(name)) throw new InvalidNameException();
-
-            var previous = cells[name];
+            var previous = p_cells[name];
 
             //check if a dependency needs to be removed
             if(previous != null)
@@ -168,7 +220,7 @@ namespace SS
                 }
             }
 
-            cells[name] = new Cell(name, formula, LookupVariable);
+            p_cells[name] = new Cell(name, formula, LookupVariable);
 
             //add dependency relationships
             foreach (var s in formula.GetVariables())
@@ -176,7 +228,7 @@ namespace SS
                 dependencyGraph.AddDependency(s, name);
             }
             
-            IEnumerable<string> allDependents = new List<string>();
+            IEnumerable<string> allDependents;
             List<string> toReturn = new List<string>();
 
             try
@@ -187,7 +239,7 @@ namespace SS
             }
             catch (CircularException)
             {
-                cells[name] = previous;
+                p_cells[name] = previous;
 
                 //remove dependency relationships
                 foreach (var s in formula.GetVariables())
@@ -199,11 +251,13 @@ namespace SS
             }
 
             RecalculateCells(allDependents);
+            Changed = true;
             return toReturn;
         }
 
         protected override IEnumerable<string> GetDirectDependents(string name)
         {
+            name = Normalize(name);
             var toReturn = dependencyGraph.GetDependents(name);
 
             return toReturn;
@@ -217,7 +271,7 @@ namespace SS
         {
             foreach(var s in toRecalculate)
             {
-                if (cells[s] != null) ((Cell)cells[s]!).UpdateValue();
+                if (p_cells[s] != null) ((Cell)p_cells[s]!).UpdateValue();
             }
         }
 
@@ -225,9 +279,10 @@ namespace SS
         /// checks if a given string is a valid name
         /// </summary>
         /// <returns>true if the string is valid, false otherwise</returns>
-        private bool IsValidName(string s)
+        private bool IsValidName(string name)
         {
-            if (Regex.IsMatch(s, @"^[_a-zA-Z][_a-zA-Z0-9]*$")) return true;
+            name = Normalize(name);
+            if (Regex.IsMatch(name, @"^[_a-zA-Z][_a-zA-Z0-9]*$") && IsValid(name)) return true;
             else return false;
         }
 
@@ -238,26 +293,35 @@ namespace SS
         /// <returns>a double value of the variable</returns>
         private double LookupVariable(string name)
         {
-            var v = cells[name];
+            name = Normalize(name);
+            var v = p_cells[name];
             if (v == null) throw new ArgumentException("variable not found");
 
             if (((Cell)v).Value.GetType() == typeof(double))
             {
                 return (double)((Cell)v).Value;
             }
-            else throw new ArgumentException("variable not found");
+            else throw new ArgumentException("variable has invalid value");
         }
-
-
-
-
-
-
-
 
         public override void Save(string filename)
         {
-            throw new NotImplementedException();
+            //serialize
+            Changed = false;
+            JsonSerializerOptions jso = new();
+            jso.WriteIndented = true;
+            
+
+            // Write to file.
+            try
+            {
+                var s = JsonSerializer.Serialize(this, jso);
+                using (StreamWriter outputFile = new StreamWriter(filename)){ outputFile.Write(s);}
+            }
+            catch (Exception e)
+            {
+                throw new SpreadsheetReadWriteException("Error writing Json: " + e.Message);
+            }
         }
 
         
@@ -265,4 +329,19 @@ namespace SS
         
     }
 }
+
+namespace SpreadsheetUtilities
+{
+    public class SpreadsheetData
+    {
+        public Hashtable? Cells { get; set; }
+        public string? Version { get; set;}
+
+        public SpreadsheetData()
+        {
+
+        }
+    }
+}
+
 
