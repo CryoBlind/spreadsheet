@@ -60,36 +60,36 @@ namespace SS
             Changed = false;
 
             //Read from file
-            string? json;
-            try 
-            { 
-                json = File.ReadAllText(filepath); 
-            }
-            catch (Exception e) { throw new SpreadsheetReadWriteException("File Read Failed: " + e.Message); }
+            //string? json;
+            //try 
+            //{ 
+            //    json = File.ReadAllText(filepath); 
+            //}
+            //catch (Exception e) { throw new SpreadsheetReadWriteException("File Read Failed: " + e.Message); }
 
-            SpreadsheetData? temp;
-            try
-            {
-                temp = JsonSerializer.Deserialize<SpreadsheetData>(json);
-            } 
-            catch (Exception e)
-            {
-                throw new SpreadsheetReadWriteException(e.Message);
-            }
+            //SpreadsheetData? temp;
+            //try
+            //{
+            //    temp = JsonSerializer.Deserialize<SpreadsheetData>(json);
+            //} 
+            //catch (Exception e)
+            //{
+            //    throw new SpreadsheetReadWriteException(e.Message);
+            //}
 
-            if (temp!.Version == null || temp.Cells == null) throw new SpreadsheetReadWriteException("Null values in Json File");
-            if (!temp.Version.Equals(Version)) throw new SpreadsheetReadWriteException("Version of file does not match spreadsheet version");
-            try
-            {
-                foreach (string key in temp.Cells!.Keys)
-                {
-                    SetContentsOfCell(key, ((JsonElement)temp.Cells[key]!).GetProperty("StringForm").ToString());
-                }
-            } 
-            catch(Exception e)
-            {
-                throw new SpreadsheetReadWriteException(e.Message);
-            }
+            //if (temp!.Version == null || temp.Cells == null) throw new SpreadsheetReadWriteException("Null values in Json File");
+            //if (!temp.Version.Equals(Version)) throw new SpreadsheetReadWriteException("Version of file does not match spreadsheet version");
+            //try
+            //{
+            //    foreach (string key in temp.Cells!.Keys)
+            //    {
+            //        SetContentsOfCell(key, ((JsonElement)temp.Cells[key]!).GetProperty("StringForm").ToString());
+            //    }
+            //} 
+            //catch(Exception e)
+            //{
+            //    throw new SpreadsheetReadWriteException(e.Message);
+            //}
             
         }
 
@@ -314,22 +314,22 @@ namespace SS
 
         public override void Save(string filename)
         {
-            ////serialize
-            //Changed = false;
-            //JsonSerializerOptions jso = new();
-            //jso.WriteIndented = true;
-            
+            //serialize
+            Changed = false;
+            JsonSerializerOptions jso = new();
+            jso.WriteIndented = true;
 
-            //// Write to file.
-            //try
-            //{
-            //    var s = JsonSerializer.Serialize(this, jso);
-            //    using (StreamWriter outputFile = new StreamWriter(filename)){ outputFile.Write(s);}
-            //}
-            //catch (Exception e)
-            //{
-            //    throw new SpreadsheetReadWriteException("Error writing Json: " + e.Message);
-            //}
+
+            // Write to file.
+            try
+            {
+                var s = JsonSerializer.Serialize(this, jso);
+                using (StreamWriter outputFile = new StreamWriter(filename)) { outputFile.Write(s); }
+            }
+            catch (Exception e)
+            {
+                throw new SpreadsheetReadWriteException("Error writing Json: " + e.Message);
+            }
         }
 
         
