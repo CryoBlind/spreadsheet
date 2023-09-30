@@ -314,22 +314,22 @@ namespace SS
 
         public override void Save(string filename)
         {
-            //serialize
-            Changed = false;
-            JsonSerializerOptions jso = new();
-            jso.WriteIndented = true;
+            ////serialize
+            //Changed = false;
+            //JsonSerializerOptions jso = new();
+            //jso.WriteIndented = true;
             
 
-            // Write to file.
-            try
-            {
-                var s = JsonSerializer.Serialize(this, jso);
-                using (StreamWriter outputFile = new StreamWriter(filename)){ outputFile.Write(s);}
-            }
-            catch (Exception e)
-            {
-                throw new SpreadsheetReadWriteException("Error writing Json: " + e.Message);
-            }
+            //// Write to file.
+            //try
+            //{
+            //    var s = JsonSerializer.Serialize(this, jso);
+            //    using (StreamWriter outputFile = new StreamWriter(filename)){ outputFile.Write(s);}
+            //}
+            //catch (Exception e)
+            //{
+            //    throw new SpreadsheetReadWriteException("Error writing Json: " + e.Message);
+            //}
         }
 
         
