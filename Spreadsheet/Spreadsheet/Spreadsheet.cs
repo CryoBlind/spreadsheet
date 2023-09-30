@@ -60,37 +60,37 @@ namespace SS
             Changed = false;
 
             //Read from file
-            //string? json;
-            //try 
-            //{ 
-            //    json = File.ReadAllText(filepath); 
-            //}
-            //catch (Exception e) { throw new SpreadsheetReadWriteException("File Read Failed: " + e.Message); }
+            string? json;
+            try
+            {
+                json = File.ReadAllText(filepath);
+            }
+            catch (Exception e) { throw new SpreadsheetReadWriteException("File Read Failed: " + e.Message); }
 
-            //SpreadsheetData? temp;
-            //try
-            //{
-            //    temp = JsonSerializer.Deserialize<SpreadsheetData>(json);
-            //} 
-            //catch (Exception e)
-            //{
-            //    throw new SpreadsheetReadWriteException(e.Message);
-            //}
+            SpreadsheetData? temp;
+            try
+            {
+                temp = JsonSerializer.Deserialize<SpreadsheetData>(json);
+            }
+            catch (Exception e)
+            {
+                throw new SpreadsheetReadWriteException(e.Message);
+            }
 
-            //if (temp!.Version == null || temp.Cells == null) throw new SpreadsheetReadWriteException("Null values in Json File");
-            //if (!temp.Version.Equals(Version)) throw new SpreadsheetReadWriteException("Version of file does not match spreadsheet version");
-            //try
-            //{
-            //    foreach (string key in temp.Cells!.Keys)
-            //    {
-            //        SetContentsOfCell(key, ((JsonElement)temp.Cells[key]!).GetProperty("StringForm").ToString());
-            //    }
-            //} 
-            //catch(Exception e)
-            //{
-            //    throw new SpreadsheetReadWriteException(e.Message);
-            //}
-            
+            if (temp!.Version == null || temp.Cells == null) throw new SpreadsheetReadWriteException("Null values in Json File");
+            if (!temp.Version.Equals(Version)) throw new SpreadsheetReadWriteException("Version of file does not match spreadsheet version");
+            try
+            {
+                foreach (string key in temp.Cells!.Keys)
+                {
+                    SetContentsOfCell(key, ((JsonElement)temp.Cells[key]!).GetProperty("StringForm").ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                throw new SpreadsheetReadWriteException(e.Message);
+            }
+
         }
 
         public override object GetCellContents(string name)
@@ -135,19 +135,21 @@ namespace SS
 
         public override IList<string> SetContentsOfCell(string name, string content)
         {
-            name = Normalize(name);
-            if (!IsValidName(name)) throw new InvalidNameException();
+            //name = Normalize(name);
+            //if (!IsValidName(name)) throw new InvalidNameException();
 
-            double parseResult;
-            if (Double.TryParse(content, out parseResult))
-            {
-                return SetCellContents(name, parseResult);
-            }
-            else if (content.StartsWith("="))
-            {
-                return SetCellContents(name, new Formula(content.Substring(1), Normalize, IsValid));
-            }
-            else return SetCellContents(name, content);
+            //double parseResult;
+            //if (Double.TryParse(content, out parseResult))
+            //{
+            //    return SetCellContents(name, parseResult);
+            //}
+            //else if (content.StartsWith("="))
+            //{
+            //    return SetCellContents(name, new Formula(content.Substring(1), Normalize, IsValid));
+            //}
+            //else return SetCellContents(name, content);
+
+            return new List<string>();
         }
 
         protected override IList<string> SetCellContents(string name, double number)
