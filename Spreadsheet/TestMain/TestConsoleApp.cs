@@ -7,5 +7,5 @@ var s = new Spreadsheet();
 s.SetContentsOfCell("A1", "2");
 s.SetContentsOfCell("A2", "=A3+1");
 s.Save("test.json");
-s = new Spreadsheet("test.json", (s) => s, (s) => true, "default");
+s = new Spreadsheet("test.json", (s) => true, (s) => s, "default");
 Console.WriteLine(File.ReadAllText("test.json"));

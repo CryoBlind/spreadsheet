@@ -42,7 +42,7 @@ namespace SS
             Changed = false;
         }
 
-        public Spreadsheet(Func<string, string> Normalize, Func<string, bool> IsValid, string version) : base(version)
+        public Spreadsheet(Func<string, bool> IsValid, Func<string, string> Normalize, string version) : base(version)
         {
             this.p_cells = new Hashtable();
             this.dependencyGraph = new DependencyGraph();
@@ -51,7 +51,7 @@ namespace SS
             Changed = false;
         }
 
-        public Spreadsheet(string filepath, Func<string, string> Normalize, Func<string, bool> IsValid, string version) : base(version)
+        public Spreadsheet(string filepath, Func<string, bool> IsValid, Func<string, string> Normalize, string version) : base(version)
         {
             this.p_cells = new Hashtable();
             this.dependencyGraph = new DependencyGraph();

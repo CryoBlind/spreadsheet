@@ -11,21 +11,23 @@ using SS;
 namespace SpreadsheetTests
 {
     
-
-
-
-
-
-
-    
     [TestClass]
     public class SpreadsheetTests
     {
         //PS5 My Tests--------------------------------------------------------------------------------
         [TestMethod()]
+        public void TestAbstractSpreadsheetPolymorphism()
+        {
+            AbstractSpreadsheet sheet1 = new Spreadsheet();
+            AbstractSpreadsheet sheet2 = new Spreadsheet((s) => true, (s) => s, "default"); ;
+            AbstractSpreadsheet sheet3 = new Spreadsheet("test.json", (s) => true, (s) => s, "default");
+        }
+
+
+        [TestMethod()]
         public void TestNonDefaultNormalize()
         {
-            Spreadsheet s = new Spreadsheet((s) => s.ToUpper(), (s) => true, "default");
+            Spreadsheet s = new Spreadsheet((s) => true, (s) => s.ToUpper(),"default");
             s.SetContentsOfCell("a1", "hi");
             s.SetContentsOfCell("b1", "2");
             s.SetContentsOfCell("c1", "=B1 + 2");
@@ -43,14 +45,14 @@ namespace SpreadsheetTests
         [TestMethod()]
         public void TestSaveAndLoad()
         {
-            Spreadsheet s1 = new Spreadsheet((s) => s.ToUpper(), (s) => true, "default");
+            Spreadsheet s1 = new Spreadsheet((s) => true, (s) => s.ToUpper(),"default");
             s1.SetContentsOfCell("a1", "hi");
             s1.SetContentsOfCell("b1", "2");
             s1.SetContentsOfCell("c1", "=B1 + 2");
             s1.Save("test.json");
 
             //check that all cells are the same both contents and values
-            Spreadsheet s2 = new Spreadsheet("test.json",(s) => s.ToUpper(), (s) => true, "default");
+            Spreadsheet s2 = new Spreadsheet("test.json", (s) => true, (s) => s.ToUpper(), "default");
             Assert.AreEqual(s1.GetCellValue("A1"), s2.GetCellValue("A1"));
             Assert.AreEqual(s1.GetCellContents("A1"), s2.GetCellContents("A1"));
             Assert.AreEqual(s1.GetCellValue("B1"), s2.GetCellValue("B1"));
@@ -63,7 +65,15 @@ namespace SpreadsheetTests
         [ExpectedException(typeof(SpreadsheetReadWriteException))]
         public void TestLoadInvalidFileName()
         {
-           var s = new Spreadsheet("DNE.json", (s) => s.ToUpper(), (s) => true, "default");
+           var s = new Spreadsheet("DNE.json", (s) => true, (s) => s.ToUpper(), "default");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void TestLoadCircularDependency()
+        {
+            using (StreamWriter outputFile = new StreamWriter("circular.json")) { outputFile.Write("{\"Cells\":{\"A1\":{\"StringForm\":\"=A2\"},\"A2\":{\"StringForm\":\"=A1\\u002B1\"}},\"Version\":\"default\"}"); }
+            var s = new Spreadsheet("circular.json", (s) => true, (s) => s.ToUpper(), "default");
         }
 
         [TestMethod()]
@@ -72,7 +82,7 @@ namespace SpreadsheetTests
         {
             using (StreamWriter outputFile = new StreamWriter("emptyvalues.json")) { outputFile.Write("{}"); }
 
-            var s = new Spreadsheet("emptyvalues.json", (s) => s.ToUpper(), (s) => true, "default");
+            var s = new Spreadsheet("emptyvalues.json", (s) => true, (s) => s.ToUpper(), "default");
         }
 
         [TestMethod()]
@@ -81,7 +91,7 @@ namespace SpreadsheetTests
         {
             using (StreamWriter outputFile = new StreamWriter("empty.json")) { outputFile.Write(""); }
 
-            var s = new Spreadsheet("empty.json", (s) => s.ToUpper(), (s) => true, "default");
+            var s = new Spreadsheet("empty.json", (s) => true, (s) => s.ToUpper(), "default");
         }
 
         [TestMethod()]
@@ -90,14 +100,14 @@ namespace SpreadsheetTests
         {
             using (StreamWriter outputFile = new StreamWriter("wrongversion.json")) { outputFile.Write("{\"Cells\":{\"A1\":{\"StringForm\":\"2\"},\"A2\":{\"StringForm\":\"=A3\\u002B1\"}},\"Version\":\"NOT Default\"}"); }
 
-            var s = new Spreadsheet("wrongversion.json", (s) => s.ToUpper(), (s) => true, "default");
+            var s = new Spreadsheet("wrongversion.json", (s) => true, (s) => s.ToUpper(), "default");
         }
 
         [TestMethod()]
         [ExpectedException(typeof(SpreadsheetReadWriteException))]
         public void TestSaveError()
         {
-            Spreadsheet s1 = new Spreadsheet((s) => s.ToUpper(), (s) => true, "default");
+            Spreadsheet s1 = new Spreadsheet((s) => true, (s) => s.ToUpper(), "default");
             s1.SetContentsOfCell("a1", "hi");
             s1.SetContentsOfCell("b1", "2");
             s1.SetContentsOfCell("c1", "=B1 + 2");
