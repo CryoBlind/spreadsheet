@@ -11,7 +11,7 @@ using SS;
 namespace SpreadsheetTests
 {
     
-    [TestClass]
+    [TestClass()]
     public class SpreadsheetTests
     {
         //PS5 My Tests--------------------------------------------------------------------------------
