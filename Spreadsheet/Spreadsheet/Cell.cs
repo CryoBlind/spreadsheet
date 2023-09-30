@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -117,6 +118,17 @@ namespace SpreadsheetUtilities
                 Value = (double)Contents;
                 return;
             }
+        }
+    }
+
+    public class SpreadsheetData
+    {
+        public Hashtable? Cells { get; set; }
+        public string? Version { get; set; }
+
+        public SpreadsheetData()
+        {
+
         }
     }
 }

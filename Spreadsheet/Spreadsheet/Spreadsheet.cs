@@ -135,21 +135,19 @@ namespace SS
 
         public override IList<string> SetContentsOfCell(string name, string content)
         {
-            //name = Normalize(name);
-            //if (!IsValidName(name)) throw new InvalidNameException();
+            name = Normalize(name);
+            if (!IsValidName(name)) throw new InvalidNameException();
 
-            //double parseResult;
-            //if (Double.TryParse(content, out parseResult))
-            //{
-            //    return SetCellContents(name, parseResult);
-            //}
-            //else if (content.StartsWith("="))
-            //{
-            //    return SetCellContents(name, new Formula(content.Substring(1), Normalize, IsValid));
-            //}
-            //else return SetCellContents(name, content);
-
-            return new List<string>();
+            double parseResult;
+            if (Double.TryParse(content, out parseResult))
+            {
+                return SetCellContents(name, parseResult);
+            }
+            else if (content.StartsWith("="))
+            {
+                return SetCellContents(name, new Formula(content.Substring(1), Normalize, IsValid));
+            }
+            else return SetCellContents(name, content);
         }
 
         protected override IList<string> SetCellContents(string name, double number)
@@ -337,20 +335,6 @@ namespace SS
         
 
         
-    }
-}
-
-namespace SpreadsheetUtilities
-{
-    public class SpreadsheetData
-    {
-        public Hashtable? Cells { get; set; }
-        public string? Version { get; set;}
-
-        public SpreadsheetData()
-        {
-
-        }
     }
 }
 
