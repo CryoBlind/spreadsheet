@@ -111,7 +111,7 @@ namespace SpreadsheetTests
             s1.SetContentsOfCell("a1", "hi");
             s1.SetContentsOfCell("b1", "2");
             s1.SetContentsOfCell("c1", "=B1 + 2");
-            s1.Save("notvalid\\test.json");
+            s1.Save("/notvalid/test.json");
         }
 
 
