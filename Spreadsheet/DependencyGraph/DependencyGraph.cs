@@ -1,12 +1,10 @@
 // Skeleton implementation by: Joe Zachary, Daniel Kopta, Travis Martin for CS 3500
 // Last updated: August 2023 (small tweak to API)
 
-using System.Collections;
-
 namespace SpreadsheetUtilities;
 
 /// <summary>
-/// (s1,t1) is an ordered pair of strings 
+/// (s1,t1) is an ordered pair of strings
 /// t1 depends on s1; s1 must be evaluated before t1
 /// 
 /// A DependencyGraph can be modeled as a set of ordered pairs of strings.  Two ordered pairs
@@ -34,29 +32,20 @@ namespace SpreadsheetUtilities;
 /// </summary>
 public class DependencyGraph
 {
-    private int p_NumDependencies;
-    private Hashtable? p_cells;
 
-    public Hashtable Cells
-    {
-        get
-        {
-            return p_cells!;
-        }
-        private set
-        {
-            p_cells = value;
-        }
-    }
+    //Two seperate Dictionaries are declared, one for the dependents of a cell 
+    //and the other for the dependees of a cell
+    private Dictionary<string, HashSet<string>> dependents;
+    private Dictionary<string, HashSet<string>> dependees;
+
     /// <summary>
     /// Creates an empty DependencyGraph.
     /// </summary>
     public DependencyGraph()
     {
-        Cells = new Hashtable();
-        p_NumDependencies = 0;
+        dependents = new Dictionary<string, HashSet<string>>();
+        dependees = new Dictionary<string, HashSet<string>>();
     }
-
 
     /// <summary>
     /// The number of ordered pairs in the DependencyGraph.
@@ -64,9 +53,16 @@ public class DependencyGraph
     /// </summary>
     public int NumDependencies
     {
-        get {return p_NumDependencies;}
-    }
+        //Goes through each HashSet in the dependees set so the number of ordered pairs can be counted up
+        get
+        {
+            int count = 0;
+            foreach (HashSet<string> dependeesHashSets in dependees.Values)
+                count += dependeesHashSets.Count;
 
+            return count;
+        }
+    }
 
     /// <summary>
     /// Returns the size of dependees(s),
@@ -74,50 +70,49 @@ public class DependencyGraph
     /// </summary>
     public int NumDependees(string s)
     {
-        if (Cells[s] == null) return 0;
-        else return ((Node)Cells[s]!).Dependees.Count;
-    }
+        if (dependees.ContainsKey(s))
+            return dependees[s].Count;
 
+        return 0;
+    }
 
     /// <summary>
     /// Reports whether dependents(s) is non-empty.
     /// </summary>
     public bool HasDependents(string s)
     {
-        if(Cells[s] != null) return ((Node)Cells[s]!).Dependents.Count > 0;
-        else return false;
+        return dependents.ContainsKey(s) && dependents[s].Count > 0;
     }
-
 
     /// <summary>
     /// Reports whether dependees(s) is non-empty.
     /// </summary>
     public bool HasDependees(string s)
     {
-        if (Cells[s] != null) return ((Node)Cells[s]!).Dependees.Count > 0;
-        else return false;
+        return dependees.ContainsKey(s) && dependees[s].Count > 0;
     }
-
 
     /// <summary>
     /// Enumerates dependents(s).
     /// </summary>
     public IEnumerable<string> GetDependents(string s)
     {
-        if (Cells[s] != null) return ((Node)Cells[s]!).Dependents;
-        else return Enumerable.Empty<string>();
+        if (dependents.ContainsKey(s))
+            return dependents[s];
+
+        return new HashSet<string>();
     }
 
-
     /// <summary>
-    /// Enumerates dependees(s).
+    /// Enumerates dependents(s).
     /// </summary>
     public IEnumerable<string> GetDependees(string s)
     {
-        if (Cells[s] != null) return ((Node)Cells[s]!).Dependees;
-        else return Enumerable.Empty<string>();
-    }
+        if (dependees.ContainsKey(s))
+            return dependees[s];
 
+        return new HashSet<string>();
+    }
 
     /// <summary>
     /// <para>Adds the ordered pair (s,t), if it doesn't exist</para>
@@ -131,30 +126,22 @@ public class DependencyGraph
     /// <param name="t"> t cannot be evaluated until s is</param>
     public void AddDependency(string s, string t)
     {
-        bool shouldAddDependency = true;
+        //Checks if s is a dependee, if not a new HashSet is made for it's dependents
+        if (!dependents.ContainsKey(s))
+            dependents[s] = new HashSet<string>();
 
-        if (!Cells.ContainsKey(s))
-        {
-            //create key
-            Cells.Add(s, new Node());
-        }
-        if (!Cells.ContainsKey(t))
-        {
-            //create key
-            Cells.Add(t, new Node());
-        }
+        //Checks if t is a depndent, if not a new HashSet is made to store it's dependees
+        if (!dependees.ContainsKey(t))
+            dependees[t] = new HashSet<string>();
 
-        //add dependent and dependee relationship
-        if (((Node)Cells[t]!).HashDependees[s] == null)
+        //If t is not a dependee of s than this block runs to make it one
+        //and it also makes t a dependent of s
+        if (!dependents[s].Contains(t))
         {
-            ((Node)Cells[t]!).AddDependee(s);
-            ((Node)Cells[s]!).AddDependent(t);
+            dependents[s].Add(t);
+            dependees[t].Add(s);
         }
-        else shouldAddDependency = false;
-
-        if (shouldAddDependency) p_NumDependencies++;
     }
-
 
     /// <summary>
     /// Removes the ordered pair (s,t), if it exists
@@ -163,22 +150,12 @@ public class DependencyGraph
     /// <param name="t"></param>
     public void RemoveDependency(string s, string t)
     {
-        bool shouldRemoveDepency = true;
-
-        if (Cells[t] != null)
+        if (dependents.ContainsKey(s) && dependees.ContainsKey(t))
         {
-            if (((Node)Cells[t]!).Dependees.Contains(s))
-            {
-                ((Node)Cells[t]!).RemoveDependee(s);
-                ((Node)Cells[s]!).RemoveDependent(t);
-            }
-            else shouldRemoveDepency = false;
+            dependents[s].Remove(t);
+            dependees[t].Remove(s);
         }
-        else shouldRemoveDepency = false;
-
-        if (shouldRemoveDepency) p_NumDependencies--;
     }
-
 
     /// <summary>
     /// Removes all existing ordered pairs of the form (s,r).  Then, for each
@@ -186,29 +163,19 @@ public class DependencyGraph
     /// </summary>
     public void ReplaceDependents(string s, IEnumerable<string> newDependents)
     {
-        if (!Cells.ContainsKey(s))
+        //First checks if s is an existing dependee
+        if (dependents.ContainsKey(s))
         {
-            //create key
-            Cells.Add(s, new Node());
+            //Now it removes each dependent from its HashSet
+            foreach (string dependent in dependents[s])
+                RemoveDependency(s, dependent);
         }
 
-        var removed = ((Node)Cells[s]!).RemoveAllDependents();
+        //Now, the new dependents are added back into s's HashSet
+        foreach (string dependent in newDependents)
+            AddDependency(s, dependent);
 
-        //remove dependee relationship from dependents
-        foreach(String d in removed)
-        {
-            ((Node)Cells[d]!).RemoveDependee(s);
-        }
-
-        p_NumDependencies -= removed.Count;
-        
-        //adds new relationships
-        foreach(String d in newDependents)
-        {
-            AddDependency(s, d);
-        }
     }
-
 
     /// <summary>
     /// Removes all existing ordered pairs of the form (r,s).  Then, for each 
@@ -216,139 +183,18 @@ public class DependencyGraph
     /// </summary>
     public void ReplaceDependees(string s, IEnumerable<string> newDependees)
     {
-        if (!Cells.ContainsKey(s))
+        //First checks if s is an existing dependent
+        if (dependees.ContainsKey(s))
         {
-            //create key
-            Cells.Add(s, new Node());
+            //Now it removes each dependee from its HashSet
+            foreach (string dependee in dependees[s])
+                RemoveDependency(dependee, s);
         }
 
-        var removed = ((Node)Cells[s]!).RemoveAllDependees();
-        //p_NumDependencies -= removed.Count;
-
-        //remove dependent relationship from dependees
-        foreach (String d in removed)
-        {
-            ((Node)Cells[d]!).RemoveDependent(s);
-        }
-
-        p_NumDependencies -= removed.Count;
-
-        //adds new relationships
-        foreach (String d in newDependees)
-        {
-            AddDependency(d, s);
-        }
+        //Now, the new dependees are added back into s's HashSet
+        foreach (string dependee in newDependees)
+            AddDependency(dependee, s);
     }
 }
 
 
-class Node
-{
-    private List<String>? p_dependents;
-    private List<String>? p_dependees;
-
-    private Hashtable dees;
-    private Hashtable dents;
-    public Hashtable HashDependees
-    {
-        get { return dees; }
-        private set { dees = value; }
-    }
-
-    public Hashtable HashDependents
-    {
-        get { return dents; }
-        private set { dents = value; }
-    }
-    public List<String> Dependents
-    {
-        get{
-            return p_dependents!;
-        }
-        private set{
-            p_dependents = value;
-        }
-    }
-
-    public List<String> Dependees
-    {
-        get
-        {
-            return p_dependees!;
-        }
-        private set
-        {
-            p_dependees = value;
-        }
-    }
-
-    public Node()
-    {
-        dees = new Hashtable();
-        dents = new Hashtable();
-        Dependees = new List<String>();
-        Dependents = new List<String>();
-    }
-
-    /// <summary>
-    /// adds dependee
-    /// </summary>
-    /// <param name="dependee"></param>
-    public void AddDependee(String dependee)
-    {
-        Dependees.Add(dependee);
-        dees[dependee] = "";
-    }
-
-    /// <summary>
-    /// adds dependent
-    /// </summary>
-    /// <param name="dependent"></param>
-    public void AddDependent(String dependent)
-    {
-        Dependents.Add(dependent);
-        dents[dependent] = "";
-    }
-
-    /// <summary>
-    /// removes dependee
-    /// </summary>
-    /// <param name="dependee"></param>
-    public void RemoveDependee(String dependee)
-    {
-        Dependees.Remove(dependee);
-        dees[dependee] = null;
-    }
-
-    /// <summary>
-    /// removes dependent
-    /// </summary>
-    /// <param name="dependent"></param>
-    public void RemoveDependent(String dependent)
-    {
-        Dependents.Remove(dependent);
-        dents[dependent] = null;
-    }
-
-    /// <summary>
-    /// removes all dependents and returns a list of the previous dependents
-    /// </summary>
-    /// <returns>previous dependents</returns>
-    public List<String> RemoveAllDependents()
-    {
-        var toReturn = Dependents;
-        Dependents = new List<String>();
-        return toReturn;
-    }
-
-    /// <summary>
-    /// removes all dependees and returns a list of the previous dependees
-    /// </summary>
-    /// <returns>previous dependees</returns>
-    public List<String> RemoveAllDependees()
-    {
-        var toReturn = Dependees;
-        Dependees = new List<String>();
-        return toReturn;
-    }
-}
