@@ -1,4 +1,5 @@
-﻿using SS;
+﻿using SpreadsheetUtilities;
+using SS;
 
 namespace SpreadsheetGUI;
 
@@ -7,6 +8,8 @@ namespace SpreadsheetGUI;
 /// </summary>
 public partial class MainPage : ContentPage
 {
+    Spreadsheet s;
+
 
     /// <summary>
     /// Constructor for the demo
@@ -14,6 +17,8 @@ public partial class MainPage : ContentPage
 	public MainPage()
     {
         InitializeComponent();
+
+        s = new Spreadsheet();
 
         // This an example of registering a method so that it is notified when
         // an event happens.  The SelectionChanged event is declared with a
@@ -28,13 +33,50 @@ public partial class MainPage : ContentPage
     {
         spreadsheetGrid.GetSelection(out int col, out int row);
         spreadsheetGrid.GetValue(col, row, out string value);
-        if (value == "")
+        string CellName = "" + (char)(col + (int)('A')) + (row + 1);
+
+
+        //set name
+        inputName.Text = CellName;
+        //set value
+        inputValue.Text= value;
+
+        //set contents
+        var CellContents = s.GetCellContents(CellName);
+        if (CellContents.GetType() == typeof(string))
         {
-            spreadsheetGrid.SetValue(col, row, DateTime.Now.ToLocalTime().ToString("T"));
-            spreadsheetGrid.GetValue(col, row, out value);
-            DisplayAlert("Selection:", "column " + col + " row " + row + " value " + value, "OK");
+            inputContent.Text = (string)CellContents;
         }
+        else if(CellContents.GetType() == typeof(double))
+        {
+            inputContent.Text = ((double)CellContents).ToString();
+        }
+        else
+        {
+            inputContent.Text = ((Formula)CellContents).ToString();
+        }
+
+        
+
+
+
+        //if (value == "")
+        //{
+        //    spreadsheetGrid.SetValue(col, row, DateTime.Now.ToLocalTime().ToString("T"));
+        //    spreadsheetGrid.GetValue(col, row, out value);
+        //    DisplayAlert("Selection:", "column " + col + " row " + row + " value " + value, "OK");
+        //}
     }
+
+    /// <summary>
+    /// Fires when contents of cell are changed
+    /// </summary>
+    private void OnContentsChanged(object sender, EventArgs e)
+    {
+        //s.SetContentsOfCell(inputName.Text, inputContent.Text);
+
+    }
+
 
     private void NewClicked(Object sender, EventArgs e)
     {

@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
+
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:SS="clr-namespace:SS"
@@ -9,8 +10,32 @@
             <MenuFlyoutItem Text="Open" Clicked="OpenClicked" />
         </MenuBarItem>
     </ContentPage.MenuBarItems>
-    <Grid>
-        <SS:SpreadsheetGrid x:Name="spreadsheetGrid" />
-    </Grid>
+    <VerticalStackLayout>
+        <HorizontalStackLayout BackgroundColor="DarkGrey">
+            <Label WidthRequest="13"/>
+
+            <Label Text= "Name:" FontSize="20" VerticalTextAlignment="Center"/>
+            <Label WidthRequest="10"/>
+            <Entry x:Name="inputName" WidthRequest="120" IsReadOnly="True" FontSize="20" BackgroundColor="LightGray" TextColor="Black"/>
+
+            <Label WidthRequest="20"/>
+
+            <Label Text= "Value:" FontSize="20" VerticalTextAlignment="Center"/>
+            <Label WidthRequest="10"/>
+            <Entry x:Name="inputValue" IsReadOnly="True" WidthRequest="120" FontSize="20" BackgroundColor="LightGray" TextColor="Black"/>
+
+            <Label WidthRequest="20"/>
+            
+            <Label Text= "Content:" FontSize="20" VerticalTextAlignment="Center"/>
+            <Label WidthRequest="10"/>
+            <Entry x:Name="inputContent" WidthRequest="500" FontSize="20" BackgroundColor="LightGray" TextColor="Black" TextChanged="OnContentsChanged"/>
+
+        </HorizontalStackLayout>
+
+        <Grid>
+            <SS:SpreadsheetGrid x:Name="spreadsheetGrid" />
+        </Grid>
+    </VerticalStackLayout> 
 </ContentPage>
+
 
