@@ -1,5 +1,8 @@
 ﻿using SpreadsheetUtilities;
 using SS;
+using System.Diagnostics;
+using System.Numerics;
+using System.Text.RegularExpressions;
 
 namespace SpreadsheetGUI;
 
@@ -10,6 +13,9 @@ public partial class MainPage : ContentPage
 {
     Spreadsheet s;
 
+    private bool Validate(string s) {
+        return Regex.IsMatch(s, @"^[A-Z][0-9][0-9]$");        
+    }
 
     /// <summary>
     /// Constructor for the demo
@@ -38,22 +44,24 @@ public partial class MainPage : ContentPage
 
         //set name
         inputName.Text = CellName;
-        //set value
-        inputValue.Text= value;
 
-        //set contents
+        //set contents and value
         var CellContents = s.GetCellContents(CellName);
         if (CellContents.GetType() == typeof(string))
         {
             inputContent.Text = (string)CellContents;
+            inputValue.Text = (string)CellContents; 
         }
         else if(CellContents.GetType() == typeof(double))
         {
             inputContent.Text = ((double)CellContents).ToString();
+            inputValue.Text = ((double)CellContents).ToString();
         }
         else
         {
-            inputContent.Text = ((Formula)CellContents).ToString();
+            inputContent.Text = "=" + ((Formula)CellContents).ToString();
+            inputValue.Text ="" +  s.GetCellValue(CellName);
+            //TODO could be formula error.  Handle this
         }
 
         
@@ -73,7 +81,26 @@ public partial class MainPage : ContentPage
     /// </summary>
     private void OnContentsChanged(object sender, EventArgs e)
     {
-        //s.SetContentsOfCell(inputName.Text, inputContent.Text);
+        spreadsheetGrid.GetSelection(out int col, out int row);
+        System.Diagnostics.Debug.WriteLine("col: " + col + " row: " + row + " text: " + inputContent.Text);
+
+        try
+        {
+            var name = (char)('A' + col) + "" + (row + 1);
+            var toUpdate = s.SetContentsOfCell(name, inputContent.Text);
+
+            spreadsheetGrid.SetValue(col, row, "" + s.GetCellValue(name));
+            foreach (string cell in toUpdate)
+            {
+                spreadsheetGrid.SetValue((int)(name[0]) - 'A', int.Parse(name.Substring(1)) - 1, "" + s.GetCellValue(name));
+            }
+        }
+        //CARE ABOUT LATERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+        catch(Exception) 
+        { 
+        
+        }
+        
         //TODOOOOOOOOOOOOOOOOOOOOOOO
     }
 
@@ -81,6 +108,18 @@ public partial class MainPage : ContentPage
     private void NewClicked(Object sender, EventArgs e)
     {
         spreadsheetGrid.Clear();
+    }
+
+    private void PopulateCells(string fileName)
+    {
+        var tempSheet = new Spreadsheet(fileName, Validate, (s) => s.ToUpper(), "1.0");
+        spreadsheetGrid.Clear();
+        foreach (var e in s.GetNamesOfAllNonemptyCells())
+        {
+            //update each nonempty cell
+            spreadsheetGrid.SetValue((int)(e[0]) - 'A', int.Parse(e.Substring(1)), tempSheet.GetCellValue(e).ToString());
+
+        }
     }
 
     /// <summary>
@@ -95,22 +134,24 @@ public partial class MainPage : ContentPage
             FileResult fileResult = await FilePicker.Default.PickAsync();
             if (fileResult != null)
             {
-        Console.WriteLine( "Successfully chose file: " + fileResult.FileName );
+        System.Diagnostics.Debug.WriteLine( "Successfully chose file: " + fileResult.FileName );
         // for windows, replace Console.WriteLine statements with:
         //System.Diagnostics.Debug.WriteLine( ... );
 
         string fileContents = File.ReadAllText(fileResult.FullPath);
-                Console.WriteLine("First 100 file chars:\n" + fileContents.Substring(0, 100));
+                System.Diagnostics.Debug.WriteLine("First 100 file chars:\n" + fileContents.Substring(0, 100));
+                //populate the cells
+                PopulateCells(fileResult.FullPath);
             }
             else
             {
-                Console.WriteLine("No file selected.");
+                System.Diagnostics.Debug.WriteLine("No file selected.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error opening file:");
-            Console.WriteLine(ex);
+            System.Diagnostics.Debug.WriteLine("Error opening file:");
+            System.Diagnostics.Debug.WriteLine(ex);
         }
     }
 }

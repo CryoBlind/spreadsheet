@@ -16,7 +16,7 @@
 
             <Label Text= "Name:" FontSize="20" VerticalTextAlignment="Center"/>
             <Label WidthRequest="10"/>
-            <Entry x:Name="inputName" WidthRequest="120" IsReadOnly="True" FontSize="20" BackgroundColor="LightGray" TextColor="Black"/>
+            <Entry x:Name="inputName" WidthRequest="120" IsReadOnly="True" FontSize="20" BackgroundColor="LightGray" TextColor="Black" />
 
             <Label WidthRequest="20"/>
 
@@ -28,7 +28,8 @@
             
             <Label Text= "Content:" FontSize="20" VerticalTextAlignment="Center"/>
             <Label WidthRequest="10"/>
-            <Entry x:Name="inputContent" WidthRequest="500" FontSize="20" BackgroundColor="LightGray" TextColor="Black" TextChanged="OnContentsChanged"/>
+            <Entry x:Name="inputContent" WidthRequest="500" FontSize="20" BackgroundColor="LightGray" TextColor="Black"/>
+            <Button Text="Input Contents" Clicked="OnContentsChanged"/>
 
         </HorizontalStackLayout>
 
