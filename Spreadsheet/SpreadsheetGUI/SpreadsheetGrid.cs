@@ -109,6 +109,10 @@ public class SpreadsheetGrid : ScrollView, IDrawable, ISpreadsheetGrid
         }
         _selectedCol = col;
         _selectedRow = row;
+        if (SelectionChanged != null)
+        {
+            SelectionChanged(this);
+        }
         Invalidate();
         return true;
     }
@@ -166,6 +170,7 @@ public class SpreadsheetGrid : ScrollView, IDrawable, ISpreadsheetGrid
         }
         Invalidate();
     }
+
 
     private void Invalidate()
     {

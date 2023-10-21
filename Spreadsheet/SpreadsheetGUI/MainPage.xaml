@@ -4,14 +4,30 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:SS="clr-namespace:SS"
              x:Class="SpreadsheetGUI.MainPage">
-    <ContentPage.MenuBarItems>
-        <MenuBarItem Text="File">
-            <MenuFlyoutItem Text="New" Clicked="NewClicked" />
-            <MenuFlyoutItem Text="Open" Clicked="OpenClicked" />
-        </MenuBarItem>
-    </ContentPage.MenuBarItems>
-    <VerticalStackLayout>
-        <HorizontalStackLayout BackgroundColor="DarkGrey">
+    
+        <ContentPage.MenuBarItems>
+            <MenuBarItem Text="File">
+                <MenuFlyoutItem Text="New" Clicked="NewClicked" />
+                <MenuFlyoutItem Text="Open" Clicked="OpenClicked" />
+                <MenuFlyoutItem Text="Save" Clicked="SaveClicked" />
+            </MenuBarItem>
+
+            <MenuBarItem Text="Help" >
+                <MenuFlyoutItem Text="Help" Clicked="HelpClicked" />
+            </MenuBarItem>
+        </ContentPage.MenuBarItems>  
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>     
+
+        <HorizontalStackLayout Grid.Row="0" Grid.ColumnSpan="2" BackgroundColor="DarkGrey">
             <Label WidthRequest="13"/>
 
             <Label Text= "Name:" FontSize="20" VerticalTextAlignment="Center"/>
@@ -31,12 +47,20 @@
             <Entry x:Name="inputContent" WidthRequest="500" FontSize="20" BackgroundColor="LightGray" TextColor="Black"/>
             <Button Text="Input Contents" Clicked="OnContentsChanged"/>
 
+            <Label WidthRequest="25"/>
+
+            <Button Text="Sum" Clicked="SumClicked"/>
+            <Button Text="Average" Clicked="AverageClicked"/>
+            <Button Text="Median" Clicked="MedianClicked"/>
         </HorizontalStackLayout>
 
-        <Grid>
-            <SS:SpreadsheetGrid x:Name="spreadsheetGrid" />
-        </Grid>
-    </VerticalStackLayout> 
+        <SS:SpreadsheetGrid Grid.Row="1" Grid.ColumnSpan="2" x:Name="spreadsheetGrid" />
+
+    </Grid>
+
+                
+    
+
 </ContentPage>
 
 
